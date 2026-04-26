@@ -1,4 +1,10 @@
 {
+  "name": "hack_arizona",
+  "private": true,
+  "scripts": {
+    "start": "node app.js",
+    "seed": "node scripts/seed.js"
+  },
   "dependencies": {
     "ejs": "^5.0.2",
     "ejs-mate": "^4.0.0",
