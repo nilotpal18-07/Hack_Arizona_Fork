@@ -131,6 +131,10 @@ body {
   margin: 0 auto;
 }
 
+.page--full {
+  max-width: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
