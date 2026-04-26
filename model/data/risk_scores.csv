@@ -1,0 +1,89 @@
+risk_score_id,participant_id,week_number,scored_at,risk_score,risk_tier,top_features,model_version
+1,1,1,2026-04-26T08:22:07.850777+00:00,0.08,low,"{'housing_barrier': 0.04, 'financial_stress': 0.04}",v1
+2,1,2,2026-04-26T08:22:07.850777+00:00,0.07,low,"{'financial_stress': 0.04, 'transport_barrier': 0.03}",v1
+3,1,3,2026-04-26T08:22:07.850777+00:00,0.09,low,"{'financial_stress': 0.05, 'transport_barrier': 0.04}",v1
+4,1,4,2026-04-26T08:22:07.850777+00:00,0.08,low,"{'financial_stress': 0.04, 'feeling_overwhelmed': 0.04}",v1
+5,1,5,2026-04-26T08:22:07.850777+00:00,0.08,low,"{'housing_barrier': 0.03, 'financial_stress': 0.05}",v1
+6,1,6,2026-04-26T08:22:07.850777+00:00,0.07,low,"{'financial_stress': 0.04, 'transport_barrier': 0.03}",v1
+7,1,7,2026-04-26T08:22:07.850777+00:00,0.06,low,"{'housing_barrier': 0.03, 'financial_stress': 0.03}",v1
+8,1,8,2026-04-26T08:22:07.850777+00:00,0.06,low,"{'financial_stress': 0.03, 'transport_barrier': 0.03}",v1
+9,1,9,2026-04-26T08:22:07.850777+00:00,0.05,low,"{'housing_barrier': 0.02, 'financial_stress': 0.03}",v1
+10,1,10,2026-04-26T08:22:07.850777+00:00,0.04,low,"{'financial_stress': 0.02, 'transport_barrier': 0.02}",v1
+11,2,1,2026-04-26T08:22:07.850777+00:00,0.12,low,"{'housing_barrier': 0.07, 'feeling_overwhelmed': 0.05}",v1
+12,2,2,2026-04-26T08:22:07.850777+00:00,0.11,low,"{'housing_barrier': 0.06, 'feeling_overwhelmed': 0.05}",v1
+13,2,3,2026-04-26T08:22:07.850777+00:00,0.11,low,"{'housing_barrier': 0.06, 'financial_stress': 0.05}",v1
+14,2,4,2026-04-26T08:22:07.850777+00:00,0.1,low,"{'housing_barrier': 0.06, 'financial_stress': 0.04}",v1
+15,2,5,2026-04-26T08:22:07.850777+00:00,0.1,low,"{'housing_barrier': 0.05, 'feeling_overwhelmed': 0.05}",v1
+16,2,6,2026-04-26T08:22:07.850777+00:00,0.09,low,"{'housing_barrier': 0.05, 'financial_stress': 0.04}",v1
+17,2,7,2026-04-26T08:22:07.850777+00:00,0.08,low,"{'housing_barrier': 0.04, 'financial_stress': 0.04}",v1
+18,2,8,2026-04-26T08:22:07.850777+00:00,0.07,low,"{'housing_barrier': 0.04, 'financial_stress': 0.03}",v1
+19,2,9,2026-04-26T08:22:07.850777+00:00,0.06,low,"{'housing_barrier': 0.03, 'financial_stress': 0.03}",v1
+20,2,10,2026-04-26T08:22:07.850777+00:00,0.05,low,"{'housing_barrier': 0.03, 'financial_stress': 0.02}",v1
+21,3,1,2026-04-26T08:22:07.850777+00:00,0.05,low,"{'financial_stress': 0.02, 'transport_barrier': 0.03}",v1
+22,3,2,2026-04-26T08:22:07.850777+00:00,0.05,low,"{'financial_stress': 0.02, 'transport_barrier': 0.03}",v1
+23,3,3,2026-04-26T08:22:07.850777+00:00,0.04,low,"{'financial_stress': 0.02, 'transport_barrier': 0.02}",v1
+24,3,4,2026-04-26T08:22:07.850777+00:00,0.04,low,"{'financial_stress': 0.02, 'transport_barrier': 0.02}",v1
+25,3,5,2026-04-26T08:22:07.850777+00:00,0.04,low,"{'financial_stress': 0.02, 'transport_barrier': 0.02}",v1
+26,3,6,2026-04-26T08:22:07.850777+00:00,0.03,low,"{'financial_stress': 0.01, 'transport_barrier': 0.02}",v1
+27,3,7,2026-04-26T08:22:07.850777+00:00,0.03,low,"{'financial_stress': 0.01, 'transport_barrier': 0.02}",v1
+28,3,8,2026-04-26T08:22:07.850777+00:00,0.03,low,"{'financial_stress': 0.02, 'transport_barrier': 0.01}",v1
+29,3,9,2026-04-26T08:22:07.850777+00:00,0.02,low,"{'financial_stress': 0.01, 'transport_barrier': 0.01}",v1
+30,3,10,2026-04-26T08:22:07.850777+00:00,0.02,low,"{'financial_stress': 0.01, 'transport_barrier': 0.01}",v1
+31,4,1,2026-04-26T08:22:07.850777+00:00,0.22,low,"{'financial_stress': 0.1, 'childcare_barrier': 0.12}",v1
+32,4,2,2026-04-26T08:22:07.850777+00:00,0.33,low,"{'childcare_barrier': 0.18, 'feeling_overwhelmed': 0.15}",v1
+33,4,3,2026-04-26T08:22:07.850777+00:00,0.74,high,"{'motivation_drop': 0.22, 'childcare_barrier': 0.38, 'feeling_overwhelmed': 0.14}",v1
+34,4,4,2026-04-26T08:22:07.850777+00:00,0.61,medium,"{'motivation_drop': 0.13, 'financial_stress': 0.2, 'childcare_barrier': 0.28}",v1
+35,4,5,2026-04-26T08:22:07.850777+00:00,0.28,low,"{'financial_stress': 0.13, 'childcare_barrier': 0.15}",v1
+36,4,6,2026-04-26T08:22:07.850777+00:00,0.22,low,"{'financial_stress': 0.1, 'childcare_barrier': 0.12}",v1
+37,4,7,2026-04-26T08:22:07.850777+00:00,0.18,low,"{'financial_stress': 0.08, 'childcare_barrier': 0.1}",v1
+38,4,8,2026-04-26T08:22:07.850777+00:00,0.15,low,"{'financial_stress': 0.07, 'childcare_barrier': 0.08}",v1
+39,4,9,2026-04-26T08:22:07.850777+00:00,0.11,low,"{'financial_stress': 0.06, 'childcare_barrier': 0.05}",v1
+40,4,10,2026-04-26T08:22:07.850777+00:00,0.08,low,"{'financial_stress': 0.04, 'childcare_barrier': 0.04}",v1
+41,5,1,2026-04-26T08:22:07.850777+00:00,0.28,low,"{'housing_barrier': 0.18, 'feeling_overwhelmed': 0.1}",v1
+42,5,2,2026-04-26T08:22:07.850777+00:00,0.48,medium,"{'housing_barrier': 0.28, 'motivation_drop': 0.08, 'financial_stress': 0.12}",v1
+43,5,3,2026-04-26T08:22:07.850777+00:00,0.81,high,"{'attendance': 0.14, 'housing_barrier': 0.42, 'motivation_drop': 0.25}",v1
+44,5,4,2026-04-26T08:22:07.850777+00:00,0.35,low,"{'housing_barrier': 0.2, 'financial_stress': 0.15}",v1
+45,5,5,2026-04-26T08:22:07.850777+00:00,0.22,low,"{'housing_barrier': 0.12, 'financial_stress': 0.1}",v1
+46,5,6,2026-04-26T08:22:07.850777+00:00,0.18,low,"{'housing_barrier': 0.1, 'financial_stress': 0.08}",v1
+47,5,7,2026-04-26T08:22:07.850777+00:00,0.15,low,"{'housing_barrier': 0.08, 'financial_stress': 0.07}",v1
+48,5,8,2026-04-26T08:22:07.850777+00:00,0.12,low,"{'housing_barrier': 0.07, 'financial_stress': 0.05}",v1
+49,5,9,2026-04-26T08:22:07.850777+00:00,0.09,low,"{'housing_barrier': 0.05, 'financial_stress': 0.04}",v1
+50,5,10,2026-04-26T08:22:07.850777+00:00,0.07,low,"{'housing_barrier': 0.04, 'financial_stress': 0.03}",v1
+51,6,1,2026-04-26T08:22:07.850777+00:00,0.18,low,"{'financial_stress': 0.1, 'transport_barrier': 0.08}",v1
+52,6,2,2026-04-26T08:22:07.850777+00:00,0.19,low,"{'financial_stress': 0.1, 'transport_barrier': 0.09}",v1
+53,6,3,2026-04-26T08:22:07.850777+00:00,0.2,low,"{'financial_stress': 0.11, 'transport_barrier': 0.09}",v1
+54,6,4,2026-04-26T08:22:07.850777+00:00,0.21,low,"{'financial_stress': 0.12, 'transport_barrier': 0.09}",v1
+55,6,5,2026-04-26T08:22:07.850777+00:00,0.68,medium,"{'motivation_drop': 0.2, 'feeling_overwhelmed': 0.1, 'financial_stress_spike': 0.38}",v1
+56,6,6,2026-04-26T08:22:07.850777+00:00,0.28,low,"{'financial_stress': 0.15, 'transport_barrier': 0.13}",v1
+57,6,7,2026-04-26T08:22:07.850777+00:00,0.22,low,"{'financial_stress': 0.12, 'transport_barrier': 0.1}",v1
+58,6,8,2026-04-26T08:22:07.850777+00:00,0.19,low,"{'financial_stress': 0.1, 'transport_barrier': 0.09}",v1
+59,6,9,2026-04-26T08:22:07.850777+00:00,0.15,low,"{'financial_stress': 0.08, 'transport_barrier': 0.07}",v1
+60,6,10,2026-04-26T08:22:07.850777+00:00,0.11,low,"{'financial_stress': 0.06, 'transport_barrier': 0.05}",v1
+61,7,1,2026-04-26T08:22:07.850777+00:00,0.58,medium,"{'housing_barrier': 0.12, 'financial_stress': 0.18, 'transport_barrier': 0.28}",v1
+62,7,2,2026-04-26T08:22:07.850777+00:00,0.61,medium,"{'financial_stress': 0.18, 'transport_barrier': 0.3, 'feeling_overwhelmed': 0.13}",v1
+63,7,3,2026-04-26T08:22:07.850777+00:00,0.64,medium,"{'housing_barrier': 0.2, 'motivation_drop': 0.14, 'transport_barrier': 0.3}",v1
+64,7,4,2026-04-26T08:22:07.850777+00:00,0.6,medium,"{'housing_barrier': 0.14, 'financial_stress': 0.18, 'transport_barrier': 0.28}",v1
+65,7,5,2026-04-26T08:22:07.850777+00:00,0.63,medium,"{'housing_barrier': 0.13, 'financial_stress': 0.2, 'transport_barrier': 0.3}",v1
+66,7,6,2026-04-26T08:22:07.850777+00:00,0.58,medium,"{'housing_barrier': 0.14, 'financial_stress': 0.16, 'transport_barrier': 0.28}",v1
+67,7,7,2026-04-26T08:22:07.850777+00:00,0.55,medium,"{'housing_barrier': 0.13, 'financial_stress': 0.16, 'transport_barrier': 0.26}",v1
+68,7,8,2026-04-26T08:22:07.850777+00:00,0.52,medium,"{'housing_barrier': 0.12, 'financial_stress': 0.15, 'transport_barrier': 0.25}",v1
+69,7,9,2026-04-26T08:22:07.850777+00:00,0.48,medium,"{'housing_barrier': 0.11, 'financial_stress': 0.14, 'transport_barrier': 0.23}",v1
+70,7,10,2026-04-26T08:22:07.850777+00:00,0.42,medium,"{'housing_barrier': 0.1, 'financial_stress': 0.12, 'transport_barrier': 0.2}",v1
+71,8,1,2026-04-26T08:22:07.850777+00:00,0.65,medium,"{'housing_barrier': 0.3, 'financial_stress': 0.15, 'feeling_overwhelmed': 0.2}",v1
+72,8,2,2026-04-26T08:22:07.850777+00:00,0.72,high,"{'housing_barrier': 0.35, 'financial_stress': 0.15, 'feeling_overwhelmed': 0.22}",v1
+73,8,3,2026-04-26T08:22:07.850777+00:00,0.75,high,"{'housing_barrier': 0.35, 'motivation_drop': 0.25, 'feeling_overwhelmed': 0.15}",v1
+74,8,4,2026-04-26T08:22:07.850777+00:00,0.73,high,"{'housing_barrier': 0.33, 'financial_stress': 0.18, 'feeling_overwhelmed': 0.22}",v1
+75,8,5,2026-04-26T08:22:07.850777+00:00,0.74,high,"{'housing_barrier': 0.35, 'financial_stress': 0.17, 'feeling_overwhelmed': 0.22}",v1
+76,8,6,2026-04-26T08:22:07.850777+00:00,0.68,medium,"{'housing_barrier': 0.32, 'financial_stress': 0.16, 'feeling_overwhelmed': 0.2}",v1
+77,8,7,2026-04-26T08:22:07.850777+00:00,0.65,medium,"{'housing_barrier': 0.3, 'financial_stress': 0.15, 'feeling_overwhelmed': 0.2}",v1
+78,8,8,2026-04-26T08:22:07.850777+00:00,0.62,medium,"{'housing_barrier': 0.28, 'financial_stress': 0.16, 'feeling_overwhelmed': 0.18}",v1
+79,8,9,2026-04-26T08:22:07.850777+00:00,0.58,medium,"{'housing_barrier': 0.25, 'financial_stress': 0.15, 'feeling_overwhelmed': 0.18}",v1
+80,8,10,2026-04-26T08:22:07.850777+00:00,0.52,medium,"{'housing_barrier': 0.22, 'financial_stress': 0.14, 'feeling_overwhelmed': 0.16}",v1
+81,9,1,2026-04-26T08:22:07.850777+00:00,0.32,low,"{'housing_barrier': 0.18, 'transport_barrier': 0.14}",v1
+82,9,2,2026-04-26T08:22:07.850777+00:00,0.48,medium,"{'housing_barrier': 0.16, 'transport_barrier': 0.22, 'feeling_overwhelmed': 0.1}",v1
+83,9,3,2026-04-26T08:22:07.850777+00:00,0.65,medium,"{'attendance': 0.22, 'transport_barrier': 0.25, 'feeling_overwhelmed': 0.18}",v1
+84,9,4,2026-04-26T08:22:07.850777+00:00,0.85,high,"{'attendance': 0.28, 'missing_reminders': 0.4, 'transport_barrier': 0.17}",v1
+85,9,5,2026-04-26T08:22:07.850777+00:00,0.96,high,"{'attendance': 0.35, 'missing_reminders': 0.45, 'transport_barrier': 0.16}",v1
+86,10,1,2026-04-26T08:22:07.850777+00:00,0.42,medium,"{'childcare_barrier': 0.22, 'transport_barrier': 0.2}",v1
+87,10,2,2026-04-26T08:22:07.850777+00:00,0.76,high,"{'motivation_drop': 0.25, 'childcare_barrier': 0.35, 'transport_barrier': 0.16}",v1
+88,10,3,2026-04-26T08:22:07.850777+00:00,0.91,high,"{'attendance': 0.19, 'childcare_barrier': 0.3, 'missing_reminders': 0.42}",v1

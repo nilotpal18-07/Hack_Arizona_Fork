@@ -1,0 +1,11 @@
+assessment_id,participant_id,cohort_id,submitted_at,primary_barrier,housing_status,has_reliable_transport,transport_mode,has_dependents,dependent_ages,childcare_arranged,financial_stress_score,stated_goal,prior_food_service,prior_food_service_years,has_support_network,contact_preference
+1,1,1,2026-04-26T08:22:07.850777+00:00,unemployment,stable,True,own_vehicle,False,,,2,Land a kitchen job and start saving for culinary school,False,,True,sms
+2,2,1,2026-04-26T08:22:07.850777+00:00,long_term_absence,stable,True,own_vehicle,False,,,2,Re-enter the workforce and regain my confidence,True,3.0,True,sms
+3,3,1,2026-04-26T08:22:07.850777+00:00,unemployment,stable,True,public_transit,False,,,1,Open my own catering business within 3 years,False,,True,sms
+4,4,1,2026-04-26T08:22:07.850777+00:00,unemployment,stable,True,own_vehicle,True,"2, 5",True,3,Build a stable career so my kids see me succeed,False,,True,sms
+5,5,1,2026-04-26T08:22:07.850777+00:00,reentry,transitional,True,own_vehicle,False,,,3,Get stable housing and a steady job I am proud of,False,,False,call
+6,6,1,2026-04-26T08:22:07.850777+00:00,unemployment,stable,True,public_transit,False,,,3,Support my family and become financially independent,False,,True,sms
+7,7,1,2026-04-26T08:22:07.850777+00:00,reentry,unstable,False,none,False,,,4,Prove to myself and my family that I can make it,False,,True,sms
+8,8,1,2026-04-26T08:22:07.850777+00:00,long_term_absence,unstable,True,public_transit,False,,,4,Get stable housing and build a life I can be proud of,False,,False,sms
+9,9,1,2026-04-26T08:22:07.850777+00:00,reentry,transitional,True,public_transit,False,,,3,Start fresh and show my kids a better path,False,,False,sms
+10,10,1,2026-04-26T08:22:07.850777+00:00,unemployment,stable,True,public_transit,True,"1, 3",True,3,Become a cook and be a role model for my children,False,,True,sms

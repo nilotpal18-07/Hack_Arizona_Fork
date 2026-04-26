@@ -1,0 +1,257 @@
+<% layout("layout") %>
+
+<%
+// Build the full 10-node quest map
+// lessons: from DB (up to 10), quizNodes: coordinator quizzes between lessons
+const TOTAL_LESSONS = 10;
+
+// Pad lessons to 10
+const allLessons = [];
+if (coursework && coursework.units) {
+  for (const unit of coursework.units) {
+    for (const lesson of (unit.lessons || [])) {
+      allLessons.push({ ...lesson, unitTitle: unit.title });
+    }
+  }
+}
+while (allLessons.length < TOTAL_LESSONS) {
+  allLessons.push({
+    slug: `placeholder-${allLessons.length + 1}`,
+    title: `Lesson ${allLessons.length + 1}`,
+    description: "Coming soon.",
+    xp: 10,
+    isPublished: false,
+    unitTitle: "Upcoming",
+    placeholder: true,
+  });
+}
+const lessons = allLessons.slice(0, TOTAL_LESSONS);
+
+// Completed slugs for current user
+const completedSlugs = (currentUser?.courseworkProgress || [])
+  .flatMap(p => p.completedLessonSlugs || []);
+const activeLessonSlug = (currentUser?.courseworkProgress || [])[0]?.activeLessonSlug || "";
+
+// Build flat node list: lesson, quiz, lesson, quiz, ... lesson
+// quizzes from coordinator: cycle through them
+const nodes = [];
+for (let i = 0; i < lessons.length; i++) {
+  const l = lessons[i];
+  const isDone = completedSlugs.includes(l.slug);
+  const isCurrent = !isDone && l.slug === activeLessonSlug;
+  const isLocked = !isDone && !isCurrent && l.placeholder;
+
+  nodes.push({
+    kind: "lesson",
+    index: i,
+    slug: l.slug,
+    title: l.title,
+    desc: l.description,
+    xp: l.xp,
+    unitTitle: l.unitTitle,
+    state: isDone ? "done" : isCurrent ? "current" : isLocked ? "locked" : (i === 0 ? "current" : "locked"),
+  });
+
+  // Insert quiz checkpoint between lessons (not after last)
+  if (i < lessons.length - 1) {
+    const q = quizzes[i % (quizzes.length || 1)];
+    const quizDone = isDone; // quiz unlocked if previous lesson done
+    nodes.push({
+      kind: "quiz",
+      index: i,
+      slug: q ? q._id : `quiz-${i}`,
+      title: q ? q.title : "Quiz Checkpoint",
+      desc: q ? (q.description || `${q.questions?.length || 0} questions`) : "Complete the lesson to unlock.",
+      xp: q ? (q.xp || 20) : 20,
+      state: quizDone ? "done" : "locked",
+    });
+  }
+}
+
+// Fix state: first non-done that isn't a placeholder gets "current"
+let foundCurrent = false;
+for (const n of nodes) {
+  if (n.state === "done") continue;
+  if (!foundCurrent) { n.state = "current"; foundCurrent = true; }
+  else { n.state = "locked"; }
+}
+
+// Positions for serpentine path (19 nodes max, left-center-right zigzag)
+function nodePos(idx, total) {
+  const step = 900 / (total - 1 || 1);
+  const y = 50 + idx * step;
+  const col = idx % 4;
+  const xs = [210, 310, 210, 110];
+  return { x: xs[col], y: Math.round(y) };
+}
+
+const positions = nodes.map((_, i) => nodePos(i, nodes.length));
+
+function nodeIcon(n) {
+  if (n.kind === "quiz") {
+    return n.state === "done" ? "✅" : n.state === "current" ? "📝" : "🔒";
+  }
+  return n.state === "done" ? "✅" : n.state === "current" ? "⭐" : "🔒";
+}
+
+const userXp    = currentUser?.xp ?? 0;
+const userStreak = currentUser?.streakCount ?? 0;
+const ahead     = typeof aheadPct !== "undefined" ? aheadPct : 0;
+%>
+
+<section class="home">
+  <header class="home__header">
+    <div>
+      <h1 class="home__title">Your quests</h1>
+      <p class="home__subtitle">Follow the path. Finish today's lesson to keep your streak alive.</p>
+    </div>
+    <div class="pillRow" aria-label="Quick stats">
+      <div class="pill">
+        <span class="pill__label">🔥 Streak</span>
+        <span class="pill__value"><%= userStreak %> days</span>
+      </div>
+      <div class="pill">
+        <span class="pill__label">⚡ XP</span>
+        <span class="pill__value"><%= userXp %></span>
+      </div>
+      <div class="pill">
+        <span class="pill__label">📊 Ahead of</span>
+        <span class="pill__value"><%= ahead %>% of users</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="home__grid home__grid--duo">
+    <!-- ── Quest map ── -->
+    <section class="mapCard" aria-label="Quest map">
+      <div class="mapCard__header">
+        <div class="mapCard__unit">
+          <span class="mapCard__unitPill">10 Lessons · <%= quizzes.length %> Quizzes</span>
+          <span class="mapCard__unitTitle">Food Bank Foundations</span>
+        </div>
+        <a class="btn btn--ghost" href="/coursework">View coursework</a>
+      </div>
+
+      <div class="duoMap" role="group" aria-label="Quest path" style="height:<%= 120 + nodes.length * 90 %>px">
+        <div class="duoMap__bg" aria-hidden="true"></div>
+
+        <!-- SVG connecting path -->
+        <svg class="duoMap__path" viewBox="0 0 420 <%= 120 + nodes.length * 90 %>" aria-hidden="true">
+          <polyline
+            points="<%= positions.map(p => `${p.x},${p.y}`).join(' ') %>"
+            fill="none"
+            stroke="rgba(214,162,31,0.55)"
+            stroke-width="16"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <polyline
+            points="<%= positions.map(p => `${p.x},${p.y}`).join(' ') %>"
+            fill="none"
+            stroke="rgba(255,255,255,0.7)"
+            stroke-width="7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+
+        <ol class="duoNodes" aria-label="Lessons and quizzes">
+          <% nodes.forEach((n, i) => { %>
+          <li
+            class="duoNode duoNode--<%= n.state %> <%= n.kind === 'quiz' ? 'duoNode--quiz' : '' %>"
+            style="--x:<%= positions[i].x %>px;--y:<%= positions[i].y %>px"
+            data-title="<%= n.title %>"
+            data-desc="<%= n.desc %>"
+            data-xp="<%= n.xp %>"
+            data-kind="<%= n.kind %>"
+          >
+            <button
+              class="duoNode__btn"
+              type="button"
+              aria-label="<%= n.title %>"
+              <%= n.state === "locked" ? "disabled" : "" %>
+            >
+              <span class="duoNode__icon" aria-hidden="true"><%= nodeIcon(n) %></span>
+              <% if (n.state === "current") { %>
+                <span class="duoNode__pulse" aria-hidden="true"></span>
+              <% } %>
+            </button>
+          </li>
+          <% }) %>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ── Detail panel ── -->
+    <aside class="panel questDetails" aria-label="Quest details">
+      <div class="panel__header">
+        <h2 class="panel__title">Quest</h2>
+        <span class="pill" style="box-shadow:none;background:transparent">
+          <span class="pill__label">Progress</span>
+          <span class="pill__value"><%= completedSlugs.length %> / <%= TOTAL_LESSONS %></span>
+        </span>
+      </div>
+      <div class="panel__body">
+        <div class="questDetails__kicker">
+          <span id="questKind" aria-hidden="true">⭐</span> <span id="questKindLabel">Lesson</span>
+        </div>
+        <h3 class="questDetails__title" id="questTitle">Select a node</h3>
+        <p class="questDetails__desc" id="questDesc">Click any unlocked node on the map.</p>
+        <div class="questDetails__xp" id="questXp" style="display:none">
+          <span class="pill" style="box-shadow:none">
+            <span class="pill__label">⚡ XP reward</span>
+            <span class="pill__value" id="questXpVal">0</span>
+          </span>
+        </div>
+        <div class="questDetails__ctaRow" style="margin-top:14px">
+          <a class="btn btn--primary" href="/coursework" id="questCta">Start quest</a>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="padding:0 16px 16px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px">
+          <span>Overall progress</span>
+          <span><%= Math.round((completedSlugs.length / TOTAL_LESSONS) * 100) %>%</span>
+        </div>
+        <div style="height:8px;border-radius:999px;background:rgba(107,42,90,0.1);overflow:hidden">
+          <div style="height:100%;width:<%= Math.round((completedSlugs.length / TOTAL_LESSONS) * 100) %>%;background:linear-gradient(90deg,#d6a21f,rgba(214,162,31,0.7));border-radius:999px;transition:width 0.4s ease"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+(function () {
+  const title   = document.getElementById("questTitle");
+  const desc    = document.getElementById("questDesc");
+  const xpEl    = document.getElementById("questXp");
+  const xpVal   = document.getElementById("questXpVal");
+  const kindEl  = document.getElementById("questKind");
+  const kindLbl = document.getElementById("questKindLabel");
+  const cta     = document.getElementById("questCta");
+
+  document.querySelectorAll(".duoNode").forEach(node => {
+    const btn = node.querySelector(".duoNode__btn");
+    if (!btn || btn.disabled) return;
+    btn.addEventListener("click", () => {
+      const t    = node.dataset.title || "Quest";
+      const d    = node.dataset.desc  || "";
+      const xp   = node.dataset.xp   || "0";
+      const kind = node.dataset.kind  || "lesson";
+      title.textContent = t;
+      desc.textContent  = d;
+      xpVal.textContent = xp;
+      xpEl.style.display = "";
+      kindEl.textContent = kind === "quiz" ? "📝" : "⭐";
+      kindLbl.textContent = kind === "quiz" ? "Quiz checkpoint" : "Lesson";
+      cta.textContent = kind === "quiz" ? "Take quiz" : "Start lesson";
+      cta.href = kind === "quiz" ? "/coursework" : "/coursework";
+    });
+  });
+
+  // Streak pill sync
+  const streak = window.__streakCount ?? <%= userStreak %>;
+})();
+</script>

@@ -1,0 +1,336 @@
+<% layout("layout") %>
+
+<%
+const currentWeek = 6;
+
+const resources = [
+  {
+    icon: "🚌",
+    title: "Transportation",
+    trigger: "Transportation barrier flagged or changed",
+    links: [
+      { label: "Sun Tran Pass Info", href: "https://www.suntran.com/fares/" },
+      { label: "Google Maps — Food Bank Route", href: "https://maps.google.com" },
+    ],
+  },
+  {
+    icon: "🏠",
+    title: "Housing Instability",
+    trigger: "Housing instability flagged or changed",
+    links: [
+      { label: "Primavera Foundation", href: "https://www.primavera.org" },
+      { label: "Rental Assistance (AZ)", href: "https://des.az.gov/services/basic-needs/rental-utility-assistance" },
+    ],
+  },
+  {
+    icon: "👶",
+    title: "Childcare",
+    trigger: "Childcare load change flagged or changed",
+    links: [
+      { label: "DES Childcare Subsidy", href: "https://des.az.gov/services/child-family/childcare" },
+      { label: "Google Maps — Nearby Centers", href: "https://maps.google.com" },
+    ],
+  },
+  {
+    icon: "💸",
+    title: "Financial Stress",
+    trigger: "Financial stress score rises week-on-week",
+    links: [
+      { label: "Motivational SMS Template", href: "#sms-financial" },
+      { label: "Community Food Bank Resources", href: "https://www.communityfoodbank.org" },
+    ],
+  },
+  {
+    icon: "🎯",
+    title: "Motivation Drop",
+    trigger: "Weekly score below 3/5",
+    links: [
+      { label: "Personalised SMS — Goal Anchor", href: "#sms-motivation" },
+      { label: "View Participant Goal", href: "#" },
+    ],
+  },
+  {
+    icon: "🧠",
+    title: "Feeling Overwhelmed",
+    trigger: "Confidence below 3 after chapter",
+    links: [
+      { label: "La Frontera Mental Health", href: "https://www.lafrontera.org" },
+      { label: "Extra Practice", href: "/coursework" },
+    ],
+  },
+  {
+    icon: "🚨",
+    title: "Missing Reminders",
+    trigger: "No SMS reply after 2 nudges — human-in-the-loop required",
+    links: [
+      { label: "Call Log Template", href: "#call-log" },
+      { label: "Mark as Contacted", href: "#" },
+    ],
+  },
+];
+
+function triggerClass(t) {
+  return { transport:"transport", housing:"housing", childcare:"childcare",
+           financial:"financial", motivation:"motivation",
+           overwhelmed:"overwhelmed", missing:"missing" }[t] || "transport";
+}
+
+function triggerLabel(t) {
+  return { transport:"🚌 Transport", housing:"🏠 Housing", childcare:"👶 Childcare",
+           financial:"💸 Financial", motivation:"🎯 Motivation",
+           overwhelmed:"🧠 Overwhelmed", missing:"🚨 Missing" }[t] || t;
+}
+
+function triggerToAutomated(t) {
+  return {
+    missing: "Red flag raised. SMS nudges sent (×2).",
+    motivation: "Personalised SMS referencing stated goal sent.",
+    overwhelmed: "Chatbot offered extra practice + La Frontera link sent.",
+  }[t] || "Automated notification sent.";
+}
+
+function triggerToAction(t) {
+  return {
+    missing: "Manual phone call required.",
+    motivation: "Check in on progress at next session.",
+    overwhelmed: "Coordinator alerted — follow up if score persists.",
+  }[t] || "Review participant status.";
+}
+
+const flagged = participants.filter(p => p.watchStatus === "flagged");
+%>
+
+<section class="coord">
+
+  <!-- ── Header ── -->
+  <header class="coord__header">
+    <div>
+      <h1 class="coord__title">Coordinator Dashboard</h1>
+      <p class="coord__sub">Risk watchlist · Intervention panel · Resource cards</p>
+    </div>
+    <div class="pillRow">
+      <div class="pill">
+        <span class="pill__label">Program week</span>
+        <span class="pill__value"><%= currentWeek %> / 10</span>
+      </div>
+      <a class="btn btn--primary" href="/coordinator/quiz/new" style="text-decoration:none">＋ Create quiz</a>
+    </div>
+  </header>
+
+  <!-- ── Stats row ── -->
+  <div class="statRow">
+    <div class="statCard">
+      <span class="statCard__label">Total participants</span>
+      <span class="statCard__value"><%= stats.total %></span>
+    </div>
+    <div class="statCard statCard--risk">
+      <span class="statCard__label">High risk</span>
+      <span class="statCard__value"><%= stats.highRisk %></span>
+    </div>
+    <div class="statCard statCard--resolved">
+      <span class="statCard__label">On track</span>
+      <span class="statCard__value"><%= stats.resolved %></span>
+    </div>
+    <div class="statCard statCard--gold">
+      <span class="statCard__label">Graduated</span>
+      <span class="statCard__value"><%= stats.graduated %></span>
+    </div>
+    <div class="statCard">
+      <span class="statCard__label">Pending interventions</span>
+      <span class="statCard__value"><%= stats.pendingInterventions %></span>
+    </div>
+  </div>
+
+  <!-- ── Risk Watchlist ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Risk Watchlist</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Dropout model</span>
+        <span class="pill__value">Logistic regression + SHAP</span>
+      </span>
+    </div>
+
+    <div class="watchlist">
+      <% if (participants.length === 0) { %>
+        <div class="emptyState">No participants yet.</div>
+      <% } else { %>
+      <table class="watchlist__table">
+        <thead>
+          <tr>
+            <th>Participant</th>
+            <th>Status</th>
+            <th>Risk score</th>
+            <th>Active triggers</th>
+            <th>Enrolled</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% participants.forEach(p => { %>
+          <tr>
+            <td>
+              <div style="font-weight:900"><%= p.name %></div>
+              <div style="font-size:12px;color:var(--muted)"><%= p.email %></div>
+              <% if (p.phone) { %><div style="font-size:12px;color:var(--muted)"><%= p.phone %></div><% } %>
+            </td>
+            <td>
+              <span class="badge badge--<%= p.status === 'active' ? 'resolved' : p.status === 'dropped' ? 'missing' : 'motivation' %>">
+                <%= p.status %>
+              </span>
+              <% if (p.week) { %><div style="font-size:12px;color:var(--muted);margin-top:4px">Week <%= p.week %></div><% } %>
+            </td>
+            <td>
+              <div class="riskBar">
+                <div class="riskBar__track">
+                  <div class="riskBar__fill riskBar__fill--<%= p.riskLevel %>"
+                    style="width:<%= p.riskPct %>%"></div>
+                </div>
+                <span class="riskBar__pct riskBar__pct--<%= p.riskLevel %>"><%= p.riskPct %>%</span>
+              </div>
+              <% if (p.topFeatures) { %>
+                <% const features = typeof p.topFeatures === 'string' ? p.topFeatures.replace(/'/g,"\"") : JSON.stringify(p.topFeatures); %>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                  <% try { const f = JSON.parse(features); const top = Object.entries(f).sort((a,b)=>b[1]-a[1])[0]; if(top) { %><%= top[0].replace(/_/g,' ') %>: <%= (top[1]*100).toFixed(0) %>%<% } } catch(e) {} %>
+                </div>
+              <% } %>
+            </td>
+            <td>
+              <div class="triggerBadges">
+                <% if (p.triggers.length === 0) { %>
+                  <span class="badge badge--resolved">✓ Clear</span>
+                <% } %>
+                <% p.triggers.forEach(t => { %>
+                  <span class="badge badge--<%= triggerClass(t) %>"><%= triggerLabel(t) %></span>
+                <% }) %>
+              </div>
+            </td>
+            <td style="color:var(--muted);font-size:13px"><%= p.enrollmentDate %></td>
+            <td>
+              <div class="actionBtns">
+                <% if (p.watchStatus !== "resolved") { %>
+                  <button class="iconBtn iconBtn--danger" type="button">🚩 Flag</button>
+                  <button class="iconBtn" type="button">📞 Outreach</button>
+                <% } else { %>
+                  <span class="badge badge--resolved">✓ On track</span>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ── Intervention Panel ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Intervention Panel</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Notification engine</span>
+        <span class="pill__value">7 trigger types</span>
+      </span>
+    </div>
+
+    <% if (flagged.length === 0) { %>
+      <div class="emptyState" style="border:1px solid rgba(107,42,90,0.1);border-radius:16px">
+        ✅ No active interventions — all participants are on track.
+      </div>
+    <% } else { %>
+    <div class="interventionGrid">
+      <% flagged.forEach(p => { %>
+        <% p.triggers.forEach((t, i) => { %>
+        <div class="interventionCard">
+          <div class="interventionCard__top">
+            <div>
+              <div class="interventionCard__name"><%= p.name %></div>
+              <div class="interventionCard__trigger"><%= triggerLabel(t) %> detected</div>
+            </div>
+            <span class="badge badge--<%= triggerClass(t) %>"><%= triggerLabel(t) %></span>
+          </div>
+          <div class="interventionCard__body">
+            <div class="interventionCard__row">
+              <span class="interventionCard__rowLabel">Automated response</span>
+              <span class="interventionCard__rowValue"><%= triggerToAutomated(t) %></span>
+            </div>
+            <div class="interventionCard__row">
+              <span class="interventionCard__rowLabel">🔴 Coordinator action</span>
+              <span class="interventionCard__rowValue"><%= triggerToAction(t) %></span>
+            </div>
+          </div>
+          <div class="interventionCard__actions">
+            <button class="btn btn--primary" type="button" style="font-size:13px;padding:8px 12px">📞 Log outreach</button>
+            <button class="btn" type="button" style="font-size:13px;padding:8px 12px">✅ Mark resolved</button>
+          </div>
+        </div>
+        <% }) %>
+      <% }) %>
+    </div>
+    <% } %>
+  </section>
+
+  <!-- ── Quizzes created ── -->
+  <% if (quizzes.length > 0) { %>
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Your Quizzes</h2>
+      <a class="btn btn--ghost" href="/coordinator/quiz/new" style="font-size:13px;padding:8px 12px">＋ New quiz</a>
+    </div>
+    <div class="resourceGrid">
+      <% quizzes.forEach(q => { %>
+      <div class="resourceCard">
+        <div class="resourceCard__head">
+          <span class="resourceCard__icon">📝</span>
+          <div>
+            <h3 class="resourceCard__title"><%= q.title %></h3>
+            <div class="resourceCard__trigger"><%= q.unit || "No unit assigned" %></div>
+          </div>
+        </div>
+        <div class="resourceCard__links">
+          <span class="badge <%= q.isPublished ? 'badge--resolved' : 'badge--motivation' %>"
+            style="padding:6px 10px;border-radius:10px">
+            <%= q.isPublished ? "✓ Published" : "💾 Draft" %>
+          </span>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ── Resource Cards ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Resource Cards</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Resource matcher</span>
+        <span class="pill__value">Barrier → partner + maps</span>
+      </span>
+    </div>
+
+    <div class="resourceGrid">
+      <% resources.forEach(r => { %>
+      <div class="resourceCard">
+        <div class="resourceCard__head">
+          <span class="resourceCard__icon"><%= r.icon %></span>
+          <div>
+            <h3 class="resourceCard__title"><%= r.title %></h3>
+            <div class="resourceCard__trigger"><%= r.trigger %></div>
+          </div>
+        </div>
+        <div class="resourceCard__links">
+          <% r.links.forEach(link => { %>
+          <a class="resourceLink" href="<%= link.href %>" target="_blank" rel="noopener noreferrer">
+            <%= link.label %>
+            <span class="resourceLink__arrow">↗</span>
+          </a>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+
+</section>

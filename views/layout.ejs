@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof title !== "undefined" ? title : "Hack Arizona" %></title>
+    <link rel="stylesheet" href="/styles.css" />
+    <% if (typeof styles !== "undefined") { %>
+      <% for (const href of styles) { %>
+        <link rel="stylesheet" href="<%= href %>" />
+      <% } %>
+    <% } %>
+  </head>
+  <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+    <%- include("partials/navbar") %>
+    <main class="<%= typeof mainClass !== 'undefined' ? mainClass : 'page' %>"><%- body %></main>
+    <script src="/navbar.js"></script>
+    <%- include("partials/chatbot") %>
+  </body>
+</html>
+

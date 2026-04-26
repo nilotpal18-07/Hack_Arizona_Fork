@@ -1,0 +1,41 @@
+<% layout("layout") %>
+
+<section class="auth">
+  <div class="auth__card">
+    <div class="auth__left">
+      <h1 class="auth__title">Create account</h1>
+      <p class="auth__subtitle">Join the quest path and track your progress.</p>
+
+      <form class="auth__form" action="/sign-up" method="post">
+        <label class="auth__label">
+          Username
+          <input class="auth__input" type="text" name="username" minlength="2" maxlength="32" />
+        </label>
+
+        <label class="auth__label">
+          Email
+          <input class="auth__input" type="email" name="email" required />
+        </label>
+
+        <label class="auth__label">
+          Password
+          <input class="auth__input" type="password" name="password" minlength="8" required />
+        </label>
+
+        <button class="auth__button" type="submit">Sign up</button>
+
+        <p class="auth__hint">
+          Already have an account?
+          <a class="auth__link" href="/sign-in">Sign in</a>
+        </p>
+      </form>
+    </div>
+
+    <div class="auth__right" aria-hidden="true">
+      <div class="auth__media">
+        <img class="auth__image" src="/images/Log-in.jpg" alt="" />
+      </div>
+    </div>
+  </div>
+</section>
+

@@ -1,0 +1,73 @@
+.lboard {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+}
+
+.lboard__standing {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(214, 162, 31, 0.35);
+  background: linear-gradient(135deg, rgba(255,249,230,0.9), rgba(255,255,255,0.85));
+  box-shadow: var(--shadow);
+  align-items: center;
+}
+
+.lboard__standingMain {
+  text-align: center;
+  padding: 12px;
+}
+
+.lboard__standingLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.lboard__standingPct {
+  font-size: 64px;
+  font-weight: 950;
+  color: #92680a;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.lboard__standingSub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.lboard__standingStats {
+  display: flex;
+  gap: 12px;
+}
+
+.lboard__myRow {
+  background: rgba(214, 162, 31, 0.08);
+}
+
+.lboard__myRow td {
+  border-color: rgba(214, 162, 31, 0.2);
+}
+
+.lboard__medal {
+  font-size: 20px;
+}
+
+@media (max-width: 600px) {
+  .lboard__standing {
+    grid-template-columns: 1fr;
+  }
+  .lboard__standingStats {
+    flex-wrap: wrap;
+  }
+  .lboard__standingPct {
+    font-size: 48px;
+  }
+}

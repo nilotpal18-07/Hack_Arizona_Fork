@@ -1,0 +1,3 @@
+coordinator_id,first_name,last_name,email,phone,role,is_active,created_at
+1,Rosa,Mendez,rosa.mendez@communityfoodbank.org,5204991001,coordinator,True,2026-04-26T08:22:07.850777+00:00
+2,James,Okafor,james.okafor@communityfoodbank.org,5204991002,supervisor,True,2026-04-26T08:22:07.850777+00:00
