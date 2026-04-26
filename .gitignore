@@ -1,2 +1,21 @@
+# Environment & secrets
+.env
+.env.*
+
+# Model binaries
+*.pkl
+
+# Databases
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
 node_modules/
 .env

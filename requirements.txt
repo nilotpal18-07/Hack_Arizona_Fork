@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pymongo
+certifi
+mongomock
+requests
+scikit-learn
+shap
+joblib
+numpy
+pandas
+anthropic
+python-dotenv
