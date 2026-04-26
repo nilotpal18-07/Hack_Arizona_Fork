@@ -18,6 +18,17 @@ const anthropic = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
+const MODEL1_URL = process.env.MODEL1_URL || "http://localhost:7000";
+const MODEL2_URL = process.env.MODEL2_URL || "http://localhost:7001";
+
+async function callAPI(url, method = "GET", body = null) {
+  const opts = { method, headers: { "Content-Type": "application/json" } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(`API ${method} ${url} → ${res.status}`);
+  return res.json();
+}
+
 const app = express();
 
 const mongoose = require("./db"); // To run mongoose.connect() code from db.js
@@ -243,27 +254,50 @@ app.get("/leaderboard", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Chatbot
+// Chatbot — proxies to Model 2 (Python) for participant-aware responses
 app.post("/chat", requireAuth, express.json(), async (req, res) => {
   const { message } = req.body || {};
   if (!message) return res.json({ reply: "Please type a message." });
 
-  if (!anthropic) {
-    return res.json({
-      reply: "Chatbot not configured — add ANTHROPIC_API_KEY to model/.env to enable AI responses.",
-    });
+  const user = res.locals.currentUser;
+
+  // Resolve participant_id: check session cache, then look up by email, then default P001
+  if (!req.session.participantId) {
+    try {
+      const db = mongoose.connection.db;
+      const p = await db.collection("participants").findOne({
+        $or: [{ email: user?.email }, { name: user?.username }],
+      });
+      req.session.participantId = p ? (p.participant_id || String(p._id)) : "P001";
+    } catch (_) {
+      req.session.participantId = "P001";
+    }
   }
 
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      system: "You are a friendly assistant for the Community Food Bank volunteer training program. Answer questions about lessons, quests, food bank operations, and volunteer resources. Keep responses concise (2-3 sentences max).",
-      messages: [{ role: "user", content: String(message).slice(0, 500) }],
+    const data = await callAPI(`${MODEL2_URL}/chat`, "POST", {
+      participant_id: req.session.participantId,
+      message: String(message).slice(0, 500),
     });
-    res.json({ reply: response.content[0]?.text || "I'm not sure about that. Try asking your coordinator!" });
+    return res.json({
+      reply: data.reply || "I'm not sure about that. Try asking your coordinator!",
+      sentiment: data.sentiment,
+      flag_coordinator: data.flag_coordinator,
+    });
   } catch (err) {
-    res.json({ reply: "I'm having trouble responding right now. Please try again shortly." });
+    // Fallback to direct Anthropic if Model 2 is offline
+    if (!anthropic) return res.json({ reply: "Chatbot service is currently offline. Please try again shortly." });
+    try {
+      const response = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        system: "You are Mise, a warm supportive assistant for Caridad Community Kitchen culinary training program in Tucson AZ run by Community Food Bank of Southern Arizona. Be warm, concise, and encouraging. Never be preachy.",
+        messages: [{ role: "user", content: String(message).slice(0, 500) }],
+      });
+      return res.json({ reply: response.content[0]?.text || "I'm not sure about that. Try asking your coordinator!" });
+    } catch (e) {
+      return res.json({ reply: "I'm having trouble responding right now. Please try again shortly." });
+    }
   }
 });
 
@@ -308,86 +342,136 @@ app.get("/coordinator", requireAuth, async (req, res, next) => {
   try {
     const db = mongoose.connection.db;
 
-    const [rawParticipants, riskScores, riskEvents, interventions, quizzes] = await Promise.all([
+    const [rawParticipants, riskEvents, interventions, quizzes] = await Promise.all([
       db.collection("participants").find({}).toArray(),
-      db.collection("risk_scores").find({}).toArray(),
       db.collection("risk_events").find({ resolved: false }).toArray(),
       db.collection("interventions").find({}).toArray(),
       Quiz.find({}, "title unit isPublished createdAt").sort({ createdAt: -1 }).lean(),
     ]);
 
-    // index latest risk score per participant
-    const latestRisk = {};
-    for (const rs of riskScores) {
-      const pid = rs.participant_id;
-      if (!latestRisk[pid] || rs.week_number > latestRisk[pid].week_number) {
-        latestRisk[pid] = rs;
-      }
+    // ── Fetch live risk scores from Model 1 Python API ──────────────────────
+    let mlScores = [];
+    try {
+      mlScores = await callAPI(`${MODEL1_URL}/risk-scores`);
+    } catch (_) {
+      // Fall back to MongoDB risk_scores if Model 1 is offline
+      try {
+        const mongoScores = await db.collection("risk_scores").find({}).toArray();
+        const latestMongo = {};
+        for (const rs of mongoScores) {
+          const pid = rs.participant_id;
+          if (!latestMongo[pid] || rs.week_number > latestMongo[pid].week_number) latestMongo[pid] = rs;
+        }
+        mlScores = Object.values(latestMongo).map(rs => ({
+          participant_id: rs.participant_id,
+          risk_score:     Math.round((rs.risk_score || 0) * 100),
+          alert_level:    rs.risk_tier === "high" ? "red" : rs.risk_tier === "medium" ? "yellow" : "green",
+          shap_factor_1:  rs.top_features ? Object.keys(rs.top_features)[0] : "",
+          week_number:    rs.week_number,
+        }));
+      } catch (_2) { /* leave mlScores empty */ }
     }
 
-    // index unresolved risk events per participant
+    // Index ML scores by participant_id
+    const mlByPid = {};
+    for (const s of mlScores) mlByPid[s.participant_id] = s;
+
+    // Index unresolved risk events per participant
     const unresolvedEvents = {};
+    const triggerTypeMap = {
+      transport_barrier: "transport", housing_instability: "housing",
+      childcare_load_change: "childcare", financial_stress_spike: "financial",
+      motivation_drop: "motivation", feeling_overwhelmed: "overwhelmed",
+      missing_reminders: "missing",
+    };
     for (const ev of riskEvents) {
       const pid = ev.participant_id;
       if (!unresolvedEvents[pid]) unresolvedEvents[pid] = [];
-      unresolvedEvents[pid].push(ev.trigger_type);
+      unresolvedEvents[pid].push(triggerTypeMap[ev.trigger_type] || ev.trigger_type);
     }
 
-    const triggerTypeMap = {
-      transport_barrier: "transport",
-      housing_instability: "housing",
-      childcare_load_change: "childcare",
-      financial_stress_spike: "financial",
-      motivation_drop: "motivation",
-      feeling_overwhelmed: "overwhelmed",
-      missing_reminders: "missing",
-    };
+    // ── Build participant rows ───────────────────────────────────────────────
+    // Merge MongoDB participant details with Model 1 ML risk scores
+    const allRows = [];
 
-    const participants = rawParticipants.map(p => {
-      const rs = latestRisk[p.participant_id];
-      const riskScore = rs ? rs.risk_score : 0;
-      const riskPct = Math.round(riskScore * 100);
-      const riskLevel = rs ? rs.risk_tier : "low";
-      const triggers = (unresolvedEvents[p.participant_id] || []).map(t => triggerTypeMap[t] || t);
-      const status = riskLevel === "high" ? "flagged" : riskLevel === "medium" ? "watching" : "resolved";
+    // Rows from MongoDB participants
+    for (const p of rawParticipants) {
+      const pid = p.participant_id || String(p._id);
+      const ml  = mlByPid[pid] || {};
+      const riskPct  = ml.risk_score ?? 0;
+      const alertLvl = ml.alert_level || "green";
+      const riskLevel = alertLvl === "red" ? "high" : alertLvl === "yellow" ? "med" : "low";
+      const watchStatus = alertLvl === "red" ? "flagged" : alertLvl === "yellow" ? "watching" : "resolved";
+      const triggers = unresolvedEvents[pid] || [];
+      const shap = [ml.shap_factor_1, ml.shap_factor_2, ml.shap_factor_3].filter(Boolean);
 
-      return {
-        id: p.participant_id,
-        name: `${p.first_name} ${p.last_name}`,
+      allRows.push({
+        id: pid,
+        name: p.name || `${p.first_name || ""} ${p.last_name || ""}`.trim(),
         email: p.email || "",
         phone: p.phone || "",
-        status: p.status,
+        status: p.status || "active",
         riskPct,
-        riskLevel: riskLevel === "medium" ? "med" : riskLevel,
+        riskLevel,
         triggers,
-        watchStatus: status,
-        enrollmentDate: p.enrollment_date,
-        topFeatures: rs ? rs.top_features : null,
-        week: rs ? rs.week_number : null,
-      };
-    });
+        watchStatus,
+        enrollmentDate: p.enrollment_date || p.enrollmentDate || "",
+        topFeatures: shap.join(" · ") || null,
+        week: ml.week_number || p.program_week || null,
+      });
+      delete mlByPid[pid]; // mark as consumed
+    }
 
-    participants.sort((a, b) => b.riskPct - a.riskPct);
+    // Rows from Model 1 that aren't in MongoDB (seeded demo participants)
+    for (const [pid, ml] of Object.entries(mlByPid)) {
+      const alertLvl  = ml.alert_level || "green";
+      const riskLevel = alertLvl === "red" ? "high" : alertLvl === "yellow" ? "med" : "low";
+      const shap = [ml.shap_factor_1, ml.shap_factor_2, ml.shap_factor_3].filter(Boolean);
+      allRows.push({
+        id: pid,
+        name: ml.name || pid,
+        email: "", phone: "", status: "active",
+        riskPct:      ml.risk_score ?? 0,
+        riskLevel,
+        triggers:     [],
+        watchStatus:  alertLvl === "red" ? "flagged" : alertLvl === "yellow" ? "watching" : "resolved",
+        enrollmentDate: "",
+        topFeatures:  shap.join(" · ") || null,
+        week:         ml.week_number || ml.program_week || null,
+      });
+    }
+
+    allRows.sort((a, b) => b.riskPct - a.riskPct);
 
     const stats = {
-      total: participants.length,
-      highRisk: participants.filter(p => p.riskLevel === "high").length,
-      resolved: participants.filter(p => p.watchStatus === "resolved").length,
-      graduated: rawParticipants.filter(p => p.status === "graduated").length,
+      total:                allRows.length,
+      highRisk:             allRows.filter(p => p.riskLevel === "high").length,
+      resolved:             allRows.filter(p => p.watchStatus === "resolved").length,
+      graduated:            rawParticipants.filter(p => p.status === "graduated").length,
       pendingInterventions: interventions.filter(i => i.outcome === "pending").length,
     };
 
     res.render("coordinator", {
-      title: "Coordinator Dashboard",
-      styles: ["/coordinator.css", "/home.css"],
+      title:     "Coordinator Dashboard",
+      styles:    ["/coordinator.css", "/home.css"],
       bodyClass: "page--full",
       mainClass: "page page--full",
-      participants,
+      participants: allRows,
       stats,
       quizzes,
     });
   } catch (err) {
     next(err);
+  }
+});
+
+// Refresh all ML risk scores on demand
+app.post("/coordinator/refresh-scores", requireAuth, async (_req, res) => {
+  try {
+    const result = await callAPI(`${MODEL1_URL}/predict-all`, "POST");
+    res.json({ ok: true, scored: result.scored });
+  } catch (err) {
+    res.status(502).json({ ok: false, error: err.message });
   }
 });
 

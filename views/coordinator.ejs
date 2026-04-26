@@ -113,6 +113,7 @@ const flagged = participants.filter(p => p.watchStatus === "flagged");
         <span class="pill__label">Program week</span>
         <span class="pill__value"><%= currentWeek %> / 10</span>
       </div>
+      <button class="btn" id="refreshScoresBtn" type="button" style="font-size:13px">⟳ Refresh risk scores</button>
       <a class="btn btn--primary" href="/coordinator/quiz/new" style="text-decoration:none">＋ Create quiz</a>
     </div>
   </header>
@@ -334,3 +335,28 @@ const flagged = participants.filter(p => p.watchStatus === "flagged");
   </section>
 
 </section>
+
+<script>
+(function () {
+  const btn = document.getElementById("refreshScoresBtn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "⟳ Refreshing…";
+    try {
+      const res = await fetch("/coordinator/refresh-scores", { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        btn.textContent = `✓ Scored ${data.scored} participants`;
+        setTimeout(() => location.reload(), 800);
+      } else {
+        btn.textContent = "⚠ Model 1 offline";
+        btn.disabled = false;
+      }
+    } catch {
+      btn.textContent = "⚠ Error — retry";
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
