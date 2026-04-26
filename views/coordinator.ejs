@@ -97,7 +97,7 @@ function triggerToAction(t) {
   }[t] || "Review participant status.";
 }
 
-const flagged = participants.filter(p => p.status === "flagged");
+const flagged = participants.filter(p => p.watchStatus === "flagged");
 %>
 
 <section class="coord">
@@ -132,8 +132,12 @@ const flagged = participants.filter(p => p.status === "flagged");
       <span class="statCard__value"><%= stats.resolved %></span>
     </div>
     <div class="statCard statCard--gold">
-      <span class="statCard__label">Quizzes created</span>
-      <span class="statCard__value"><%= quizzes.length %></span>
+      <span class="statCard__label">Graduated</span>
+      <span class="statCard__value"><%= stats.graduated %></span>
+    </div>
+    <div class="statCard">
+      <span class="statCard__label">Pending interventions</span>
+      <span class="statCard__value"><%= stats.pendingInterventions %></span>
     </div>
   </div>
 
@@ -155,10 +159,10 @@ const flagged = participants.filter(p => p.status === "flagged");
         <thead>
           <tr>
             <th>Participant</th>
-            <th>XP</th>
+            <th>Status</th>
             <th>Risk score</th>
             <th>Active triggers</th>
-            <th>Last activity</th>
+            <th>Enrolled</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -168,10 +172,13 @@ const flagged = participants.filter(p => p.status === "flagged");
             <td>
               <div style="font-weight:900"><%= p.name %></div>
               <div style="font-size:12px;color:var(--muted)"><%= p.email %></div>
+              <% if (p.phone) { %><div style="font-size:12px;color:var(--muted)"><%= p.phone %></div><% } %>
             </td>
             <td>
-              <div style="font-weight:800"><%= p.xp %> XP</div>
-              <div style="font-size:12px;color:var(--muted)">🔥 <%= p.streak %> streak</div>
+              <span class="badge badge--<%= p.status === 'active' ? 'resolved' : p.status === 'dropped' ? 'missing' : 'motivation' %>">
+                <%= p.status %>
+              </span>
+              <% if (p.week) { %><div style="font-size:12px;color:var(--muted);margin-top:4px">Week <%= p.week %></div><% } %>
             </td>
             <td>
               <div class="riskBar">
@@ -181,6 +188,12 @@ const flagged = participants.filter(p => p.status === "flagged");
                 </div>
                 <span class="riskBar__pct riskBar__pct--<%= p.riskLevel %>"><%= p.riskPct %>%</span>
               </div>
+              <% if (p.topFeatures) { %>
+                <% const features = typeof p.topFeatures === 'string' ? p.topFeatures.replace(/'/g,"\"") : JSON.stringify(p.topFeatures); %>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                  <% try { const f = JSON.parse(features); const top = Object.entries(f).sort((a,b)=>b[1]-a[1])[0]; if(top) { %><%= top[0].replace(/_/g,' ') %>: <%= (top[1]*100).toFixed(0) %>%<% } } catch(e) {} %>
+                </div>
+              <% } %>
             </td>
             <td>
               <div class="triggerBadges">
@@ -192,10 +205,10 @@ const flagged = participants.filter(p => p.status === "flagged");
                 <% }) %>
               </div>
             </td>
-            <td style="color:var(--muted);font-size:13px"><%= p.lastActivity %></td>
+            <td style="color:var(--muted);font-size:13px"><%= p.enrollmentDate %></td>
             <td>
               <div class="actionBtns">
-                <% if (p.status !== "resolved") { %>
+                <% if (p.watchStatus !== "resolved") { %>
                   <button class="iconBtn iconBtn--danger" type="button">🚩 Flag</button>
                   <button class="iconBtn" type="button">📞 Outreach</button>
                 <% } else { %>

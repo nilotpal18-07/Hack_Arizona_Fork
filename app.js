@@ -20,7 +20,7 @@ const anthropic = process.env.ANTHROPIC_API_KEY
 
 const app = express();
 
-require("./db"); // To run mongoose.connect() code from db.js
+const mongoose = require("./db"); // To run mongoose.connect() code from db.js
 
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
@@ -306,44 +306,64 @@ app.post("/coordinator/quiz", requireAuth, async (req, res, next) => {
 // Coordinator dashboard (Dashboard 2)
 app.get("/coordinator", requireAuth, async (req, res, next) => {
   try {
-    const allUsers = await User.find({}, "username email streakCount xp level courseworkProgress lastStreakDate createdAt").lean();
+    const db = mongoose.connection.db;
 
-    const now = Date.now();
-    const participants = allUsers.map(u => {
-      const daysSinceActivity = u.lastStreakDate
-        ? Math.floor((now - new Date(u.lastStreakDate)) / 86400000)
-        : 99;
-      const lessonsCompleted = (u.courseworkProgress || []).reduce(
-        (sum, p) => sum + (p.completedLessonSlugs?.length || 0), 0
-      );
-      // Simple risk heuristic: streak=0 + no recent activity + low xp
-      const riskPct = Math.min(
-        100,
-        (u.streakCount === 0 ? 30 : 0) +
-        (daysSinceActivity > 5 ? 35 : daysSinceActivity > 2 ? 15 : 0) +
-        (u.xp < 30 ? 20 : u.xp < 80 ? 10 : 0) +
-        (lessonsCompleted === 0 ? 15 : 0)
-      );
-      const riskLevel = riskPct >= 65 ? "high" : riskPct >= 40 ? "med" : "low";
+    const [rawParticipants, riskScores, riskEvents, interventions, quizzes] = await Promise.all([
+      db.collection("participants").find({}).toArray(),
+      db.collection("risk_scores").find({}).toArray(),
+      db.collection("risk_events").find({ resolved: false }).toArray(),
+      db.collection("interventions").find({}).toArray(),
+      Quiz.find({}, "title unit isPublished createdAt").sort({ createdAt: -1 }).lean(),
+    ]);
 
-      let lastActivity;
-      if (daysSinceActivity === 0) lastActivity = "Today";
-      else if (daysSinceActivity === 1) lastActivity = "Yesterday";
-      else if (daysSinceActivity < 99) lastActivity = `${daysSinceActivity} days ago`;
-      else lastActivity = "Never";
+    // index latest risk score per participant
+    const latestRisk = {};
+    for (const rs of riskScores) {
+      const pid = rs.participant_id;
+      if (!latestRisk[pid] || rs.week_number > latestRisk[pid].week_number) {
+        latestRisk[pid] = rs;
+      }
+    }
+
+    // index unresolved risk events per participant
+    const unresolvedEvents = {};
+    for (const ev of riskEvents) {
+      const pid = ev.participant_id;
+      if (!unresolvedEvents[pid]) unresolvedEvents[pid] = [];
+      unresolvedEvents[pid].push(ev.trigger_type);
+    }
+
+    const triggerTypeMap = {
+      transport_barrier: "transport",
+      housing_instability: "housing",
+      childcare_load_change: "childcare",
+      financial_stress_spike: "financial",
+      motivation_drop: "motivation",
+      feeling_overwhelmed: "overwhelmed",
+      missing_reminders: "missing",
+    };
+
+    const participants = rawParticipants.map(p => {
+      const rs = latestRisk[p.participant_id];
+      const riskScore = rs ? rs.risk_score : 0;
+      const riskPct = Math.round(riskScore * 100);
+      const riskLevel = rs ? rs.risk_tier : "low";
+      const triggers = (unresolvedEvents[p.participant_id] || []).map(t => triggerTypeMap[t] || t);
+      const status = riskLevel === "high" ? "flagged" : riskLevel === "medium" ? "watching" : "resolved";
 
       return {
-        id: u._id.toString(),
-        name: u.username || u.email.split("@")[0],
-        email: u.email,
-        streak: u.streakCount || 0,
-        xp: u.xp || 0,
-        lessonsCompleted,
+        id: p.participant_id,
+        name: `${p.first_name} ${p.last_name}`,
+        email: p.email || "",
+        phone: p.phone || "",
+        status: p.status,
         riskPct,
-        riskLevel,
-        lastActivity,
-        status: riskPct >= 65 ? "flagged" : riskPct >= 40 ? "watching" : "resolved",
-        triggers: buildTriggers(u, daysSinceActivity),
+        riskLevel: riskLevel === "medium" ? "med" : riskLevel,
+        triggers,
+        watchStatus: status,
+        enrollmentDate: p.enrollment_date,
+        topFeatures: rs ? rs.top_features : null,
+        week: rs ? rs.week_number : null,
       };
     });
 
@@ -352,11 +372,10 @@ app.get("/coordinator", requireAuth, async (req, res, next) => {
     const stats = {
       total: participants.length,
       highRisk: participants.filter(p => p.riskLevel === "high").length,
-      resolved: participants.filter(p => p.status === "resolved").length,
-      graduated: 0,
+      resolved: participants.filter(p => p.watchStatus === "resolved").length,
+      graduated: rawParticipants.filter(p => p.status === "graduated").length,
+      pendingInterventions: interventions.filter(i => i.outcome === "pending").length,
     };
-
-    const quizzes = await Quiz.find({}, "title unit isPublished createdAt").sort({ createdAt: -1 }).lean();
 
     res.render("coordinator", {
       title: "Coordinator Dashboard",
@@ -371,16 +390,6 @@ app.get("/coordinator", requireAuth, async (req, res, next) => {
     next(err);
   }
 });
-
-function buildTriggers(u, daysSinceActivity) {
-  const t = [];
-  if (daysSinceActivity > 5 && u.streakCount === 0) t.push("missing");
-  if (u.xp < 30) t.push("motivation");
-  if ((u.courseworkProgress || []).reduce((s, p) => s + (p.completedLessonSlugs?.length || 0), 0) === 0) {
-    if (daysSinceActivity > 2) t.push("overwhelmed");
-  }
-  return t;
-}
 
 // Admin-only example
 app.get("/admin", requireAuth, requireRole("admin"), (req, res) => {
