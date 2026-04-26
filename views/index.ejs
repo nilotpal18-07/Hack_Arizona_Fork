@@ -1,0 +1,163 @@
+<% layout("layout") %>
+
+<section class="home">
+  <header class="home__header">
+    <div>
+      <h1 class="home__title">Your quests</h1>
+      <p class="home__subtitle">Follow the path. Finish today’s lesson to keep your streak alive.</p>
+    </div>
+
+    <div class="pillRow" aria-label="Quick stats">
+      <div class="pill">
+        <span class="pill__label">Streak</span>
+        <span class="pill__value"><span id="homeStreak">0</span> days</span>
+      </div>
+      <div class="pill">
+        <span class="pill__label">XP</span>
+        <span class="pill__value">120</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="home__grid home__grid--duo">
+    <section class="mapCard" aria-label="Quest map">
+      <div class="mapCard__header">
+        <div class="mapCard__unit">
+          <span class="mapCard__unitPill">Unit 1</span>
+          <span class="mapCard__unitTitle">Food Bank Foundations</span>
+        </div>
+        <a class="btn btn--ghost" href="/coursework">View coursework</a>
+      </div>
+
+      <div class="duoMap" role="group" aria-label="Quest path">
+        <div class="duoMap__bg" aria-hidden="true"></div>
+
+        <svg class="duoMap__path" viewBox="0 0 420 980" aria-hidden="true">
+          <path
+            d="M210 40
+               C 330 80, 330 190, 210 230
+               C 90 270, 90 380, 210 420
+               C 330 460, 330 570, 210 610
+               C 90 650, 90 760, 210 800
+               C 330 840, 330 930, 210 960"
+            fill="none"
+            stroke="rgba(214, 162, 31, 0.65)"
+            stroke-width="18"
+            stroke-linecap="round"
+          />
+          <path
+            d="M210 40
+               C 330 80, 330 190, 210 230
+               C 90 270, 90 380, 210 420
+               C 330 460, 330 570, 210 610
+               C 90 650, 90 760, 210 800
+               C 330 840, 330 930, 210 960"
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.72)"
+            stroke-width="8"
+            stroke-linecap="round"
+          />
+        </svg>
+
+        <ol class="duoNodes" aria-label="Lessons">
+          <li class="duoNode duoNode--done" style="--x: 210px; --y: 70px" data-title="Basics 1" data-desc="Greetings, common phrases, quick wins.">
+            <button class="duoNode__btn" type="button" aria-label="Basics 1">
+              <span class="duoNode__icon" aria-hidden="true">✅</span>
+            </button>
+          </li>
+
+          <li class="duoNode duoNode--done" style="--x: 290px; --y: 210px" data-title="Basics 2" data-desc="Listening + matching exercises.">
+            <button class="duoNode__btn" type="button" aria-label="Basics 2">
+              <span class="duoNode__icon" aria-hidden="true">✅</span>
+            </button>
+          </li>
+
+          <li class="duoNode duoNode--current" style="--x: 170px; --y: 360px" data-title="Food Bank Tour" data-desc="Key terms you’ll see across the Food Bank experience.">
+            <button class="duoNode__btn" type="button" aria-label="Food Bank Tour">
+              <span class="duoNode__icon" aria-hidden="true">⭐</span>
+              <span class="duoNode__pulse" aria-hidden="true"></span>
+            </button>
+          </li>
+
+          <li class="duoNode duoNode--locked" style="--x: 290px; --y: 520px" data-title="Community Helpers" data-desc="Unlock after finishing today’s quest.">
+            <button class="duoNode__btn" type="button" aria-label="Community Helpers" disabled>
+              <span class="duoNode__icon" aria-hidden="true">🔒</span>
+            </button>
+          </li>
+
+          <li class="duoNode duoNode--locked" style="--x: 170px; --y: 690px" data-title="Serving Day" data-desc="A longer quest with mixed practice.">
+            <button class="duoNode__btn" type="button" aria-label="Serving Day" disabled>
+              <span class="duoNode__icon" aria-hidden="true">🔒</span>
+            </button>
+          </li>
+
+          <li class="duoNode duoNode--locked" style="--x: 230px; --y: 870px" data-title="Next Unit" data-desc="Keep going to unlock the next unit.">
+            <button class="duoNode__btn" type="button" aria-label="Next Unit" disabled>
+              <span class="duoNode__icon" aria-hidden="true">🏁</span>
+            </button>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <aside class="panel questDetails" aria-label="Quest details">
+      <div class="panel__header">
+        <h2 class="panel__title">Quest</h2>
+        <span class="pill" style="box-shadow:none;background:transparent">
+          <span class="pill__label">Progress</span>
+          <span class="pill__value">2 / 5</span>
+        </span>
+      </div>
+      <div class="panel__body">
+        <div class="questDetails__kicker">
+          <span aria-hidden="true">🎯</span> Recommended
+        </div>
+        <h3 class="questDetails__title" id="questTitle">Food Bank Tour</h3>
+        <p class="questDetails__desc" id="questDesc">
+          Key terms you’ll see across the Food Bank experience.
+        </p>
+
+        <div class="questDetails__ctaRow">
+          <a class="btn btn--primary" href="/coursework">Start quest</a>
+          <button class="btn" type="button" id="randomQuest">Pick another</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+  // Sync the streak number to both navbar + home pill
+  const streak = window.__streakCount ?? 0;
+  const el = document.getElementById("homeStreak");
+  if (el) el.textContent = String(streak);
+
+  // Simple “select quest” behavior
+  const title = document.getElementById("questTitle");
+  const desc = document.getElementById("questDesc");
+  const nodes = Array.from(document.querySelectorAll(".duoNode"));
+
+  function selectNode(node) {
+    if (!node) return;
+    const t = node.getAttribute("data-title") || "Quest";
+    const d = node.getAttribute("data-desc") || "";
+    if (title) title.textContent = t;
+    if (desc) desc.textContent = d;
+  }
+
+  nodes.forEach((node) => {
+    const btn = node.querySelector(".duoNode__btn");
+    if (!btn || btn.disabled) return;
+    btn.addEventListener("click", () => selectNode(node));
+  });
+
+  const random = document.getElementById("randomQuest");
+  if (random) {
+    random.addEventListener("click", () => {
+      const playable = nodes.filter((n) => !n.classList.contains("duoNode--locked"));
+      const pick = playable[Math.floor(Math.random() * playable.length)];
+      selectNode(pick);
+    });
+  }
+</script>
+

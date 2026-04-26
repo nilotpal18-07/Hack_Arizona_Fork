@@ -1,0 +1,35 @@
+<% layout("layout") %>
+
+<section class="home" style="max-width: 980px">
+  <header class="home__header" style="margin-bottom: 10px">
+    <div>
+      <h1 class="home__title">Coursework</h1>
+      <p class="home__subtitle">Pick a course and continue where you left off.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="panel__header">
+      <h2 class="panel__title">Available</h2>
+    </div>
+    <div class="panel__body">
+      <% if (!coursework) { %>
+        <p style="margin:0;color:var(--muted)">No coursework found. Run <code>npm run seed</code>.</p>
+      <% } else { %>
+        <div style="padding:14px;border:1px solid rgba(107,42,90,0.14);border-radius:16px;background:rgba(255,255,255,0.85)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-weight:950;color:var(--text)"><%= coursework.title %></div>
+              <div style="color:var(--muted);margin-top:4px"><%= coursework.description %></div>
+              <div style="color:var(--muted);margin-top:8px;font-size:13px">
+                Units: <%= coursework.units?.length || 0 %> · Level: <%= coursework.level %>
+              </div>
+            </div>
+            <a class="btn btn--primary" href="/">Continue</a>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+

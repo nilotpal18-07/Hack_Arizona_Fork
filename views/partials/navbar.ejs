@@ -1,0 +1,53 @@
+<header class="nav">
+  <div class="nav__left">
+    <a class="nav__brand" href="/">
+      <img class="nav__logo" src="/images/Logo.png" alt="Community Food Bank" />
+    </a>
+  </div>
+
+  <nav class="nav__right" aria-label="Primary">
+    <a class="nav__item nav__streak" href="/streaks" title="Streaks">
+      <span class="nav__streakCount" id="streakCount">0</span>
+      <span class="nav__fire" id="fireIcon" aria-hidden="true">🔥</span>
+      <span class="sr-only">Streaks</span>
+    </a>
+
+    <a class="nav__item" href="/coursework" title="Coursework">
+      <span class="nav__icon" aria-hidden="true">📚</span>
+      <span class="nav__label">Coursework</span>
+    </a>
+
+    <% if (currentUser) { %>
+      <div class="navMenu" data-nav-menu>
+        <button
+          class="nav__item navMenu__trigger"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="profileMenu"
+          title="Account menu"
+          data-nav-menu-trigger
+        >
+          <span class="nav__avatar" aria-hidden="true">👤</span>
+          <span class="sr-only">Open account menu</span>
+        </button>
+
+        <div class="navMenu__dropdown" id="profileMenu" role="menu" aria-label="Account menu" hidden data-nav-menu-dropdown>
+          <div class="navMenu__meta">
+            <div class="navMenu__name"><%= currentUser.username || "User" %></div>
+            <div class="navMenu__email"><%= currentUser.email %></div>
+          </div>
+
+          <a class="navMenu__item" role="menuitem" href="/profile">Profile details</a>
+
+          <form action="/sign-out" method="post">
+            <button class="navMenu__item navMenu__item--danger" role="menuitem" type="submit">Sign out</button>
+          </form>
+        </div>
+      </div>
+    <% } else { %>
+      <a class="nav__item" href="/sign-in" title="Sign in">Sign in</a>
+    <% } %>
+  </nav>
+</header>
+
