@@ -1,0 +1,19 @@
+event_id,participant_id,week_number,detected_at,trigger_type,trigger_value,resolved,resolved_at
+1,4,3,2026-04-26T08:22:07.850777+00:00,childcare_load_change,Childcare barrier jumped from 3 to 5,True,2026-05-09T09:00:00+00:00
+2,4,3,2026-04-26T08:22:07.850777+00:00,motivation_drop,Motivation score 2 — below 3/5 threshold,True,2026-05-09T09:00:00+00:00
+3,5,2,2026-04-26T08:22:07.850777+00:00,housing_instability,Housing barrier score 4 — second consecutive week rising,False,
+4,5,3,2026-04-26T08:22:07.850777+00:00,housing_instability,Housing barrier score 5 — critical level,True,2026-04-28T09:00:00+00:00
+5,5,3,2026-04-26T08:22:07.850777+00:00,motivation_drop,Motivation score 2 — below 3/5 threshold,True,2026-04-28T09:00:00+00:00
+6,6,5,2026-04-26T08:22:07.850777+00:00,financial_stress_spike,Financial stress jumped from 3 to 5 week-on-week,True,2026-05-16T09:00:00+00:00
+7,6,5,2026-04-26T08:22:07.850777+00:00,motivation_drop,Motivation score 2 — below 3/5 threshold,True,2026-05-16T09:00:00+00:00
+8,7,1,2026-04-26T08:22:07.850777+00:00,transport_barrier,Transport barrier score 5 — no reliable transport at baseline,False,
+9,7,3,2026-04-26T08:22:07.850777+00:00,transport_barrier,Transport barrier score 5 — third consecutive week,False,
+10,7,5,2026-04-26T08:22:07.850777+00:00,transport_barrier,Transport barrier score 5 — fifth consecutive week,False,
+11,8,2,2026-04-26T08:22:07.850777+00:00,housing_instability,Housing barrier score 5 — second consecutive week,False,
+12,8,3,2026-04-26T08:22:07.850777+00:00,motivation_drop,Motivation score 2 — below 3/5 threshold,True,2026-04-28T09:00:00+00:00
+13,8,5,2026-04-26T08:22:07.850777+00:00,housing_instability,Housing barrier score 5 — recurring pattern,False,
+14,9,4,2026-04-26T08:22:07.850777+00:00,missing_reminders,No SMS reply — first nudge unanswered,False,
+15,9,5,2026-04-26T08:22:07.850777+00:00,missing_reminders,No SMS reply — second consecutive week unanswered,False,
+16,10,2,2026-04-26T08:22:07.850777+00:00,childcare_load_change,Childcare barrier jumped from 4 to 5,False,
+17,10,2,2026-04-26T08:22:07.850777+00:00,motivation_drop,Motivation score 2 — below 3/5 threshold,False,
+18,10,3,2026-04-26T08:22:07.850777+00:00,missing_reminders,No SMS reply — no contact for full week,False,

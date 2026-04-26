@@ -1,0 +1,20 @@
+intervention_id,participant_id,risk_event_id,coordinator_id,initiated_at,intervention_type,resource_partner,resource_url,resource_maps_link,outcome,outcome_notes,closed_at
+1,4,1,1,2026-04-26T08:22:07.850777+00:00,resource_card,Arizona DES Child Care Subsidy,https://des.az.gov/services/child-and-family/childcare,,resolved,Referred to DES childcare subsidy. Sofia confirmed placement for both children by week 5.,2026-05-09T10:00:00+00:00
+2,4,2,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,resolved,Personalised SMS referencing stated goal: raising her children to see her succeed. Motivation recovered to 4 by week 5.,2026-05-09T10:00:00+00:00
+3,5,3,1,2026-04-26T08:22:07.850777+00:00,resource_card,Primavera Foundation,https://www.primavera.org,https://maps.google.com/?q=Primavera+Foundation+Tucson,resolved,Referred to Primavera Foundation transitional housing. Derek secured stable housing by week 4.,2026-04-28T10:00:00+00:00
+4,5,4,1,2026-04-26T08:22:07.850777+00:00,phone_call,,,,resolved,Called Derek to check in. Confirmed housing situation improving with Primavera support.,2026-04-28T10:00:00+00:00
+5,5,5,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,resolved,Motivational SMS referencing his stated goal. Derek responded positively.,2026-04-28T10:00:00+00:00
+6,6,6,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,resolved,"Sent SMS: ""You are ahead of 68% of past participants at this point."" Motivation recovered to 4 by week 6.",2026-05-16T10:00:00+00:00
+7,6,7,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,resolved,Personalised SMS referencing her goal of financial independence. Effective.,2026-05-16T10:00:00+00:00
+8,7,8,1,2026-04-26T08:22:07.850777+00:00,resource_card,Sun Tran,https://suntran.com/fares/,https://maps.google.com/?q=Sun+Tran+Tucson,pending,Sun Tran pass and route info provided. Carlos continues to experience transport delays.,
+9,7,9,1,2026-04-26T08:22:07.850777+00:00,resource_card,Sun Tran,https://suntran.com/fares/,https://maps.google.com/?q=Sun+Tran+Tucson,pending,Second resource card issued. Exploring carpool options with other participants.,
+10,7,10,2,2026-04-26T08:22:07.850777+00:00,in_person_meeting,,,,pending,Supervisor met with Carlos to discuss long-term transport plan. Exploring bus pass subsidy grant.,
+11,8,11,1,2026-04-26T08:22:07.850777+00:00,resource_card,Primavera Foundation,https://www.primavera.org,https://maps.google.com/?q=Primavera+Foundation+Tucson,no_response,Referred to Primavera. Tanya acknowledged referral but has not followed up.,2026-04-28T10:00:00+00:00
+12,8,12,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,resolved,Personalised SMS referencing stated goal. Motivation recovered to 3 by week 4.,2026-04-28T10:00:00+00:00
+13,8,13,2,2026-04-26T08:22:07.850777+00:00,phone_call,,,,pending,Supervisor called Tanya re: recurring housing instability. Exploring further referral options.,
+14,9,14,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,no_response,Check-in SMS sent. No reply received.,2026-05-09T10:00:00+00:00
+15,9,15,1,2026-04-26T08:22:07.850777+00:00,phone_call,,,,no_response,Called twice. No answer. Coordinator flagged critical dropout risk.,2026-05-14T10:00:00+00:00
+16,9,15,2,2026-04-26T08:22:07.850777+00:00,in_person_meeting,,,,no_response,Supervisor visited program site. Marcus did not appear. Withdrawal processed.,2026-05-14T14:00:00+00:00
+17,10,16,1,2026-04-26T08:22:07.850777+00:00,resource_card,Arizona DES Child Care Subsidy,https://des.az.gov/services/child-and-family/childcare,,no_response,DES childcare resource card sent via SMS. Rosa did not respond.,2026-04-30T10:00:00+00:00
+18,10,17,1,2026-04-26T08:22:07.850777+00:00,sms_nudge,,,,no_response,Motivational SMS sent referencing her goal. No reply received.,2026-04-30T10:00:00+00:00
+19,10,18,1,2026-04-26T08:22:07.850777+00:00,phone_call,,,,no_response,"Called twice, no answer. Withdrawal processed after no contact for full week 3.",2026-04-30T10:00:00+00:00

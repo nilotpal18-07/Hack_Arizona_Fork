@@ -1,0 +1,4 @@
+supabase==2.15.2
+pandas==2.2.3
+scikit-learn==1.6.1
+shap==0.47.2

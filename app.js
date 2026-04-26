@@ -195,14 +195,83 @@ app.post("/coordinator/quiz", requireAuth, async (req, res, next) => {
 });
 
 // Coordinator dashboard (Dashboard 2)
-app.get("/coordinator", requireAuth, (req, res) => {
-  res.render("coordinator", {
-    title: "Coordinator Dashboard",
-    styles: ["/coordinator.css", "/home.css"],
-    bodyClass: "page--full",
-    mainClass: "page page--full",
-  });
+app.get("/coordinator", requireAuth, async (req, res, next) => {
+  try {
+    const allUsers = await User.find({}, "username email streakCount xp level courseworkProgress lastStreakDate createdAt").lean();
+
+    const now = Date.now();
+    const participants = allUsers.map(u => {
+      const daysSinceActivity = u.lastStreakDate
+        ? Math.floor((now - new Date(u.lastStreakDate)) / 86400000)
+        : 99;
+      const lessonsCompleted = (u.courseworkProgress || []).reduce(
+        (sum, p) => sum + (p.completedLessonSlugs?.length || 0), 0
+      );
+      // Simple risk heuristic: streak=0 + no recent activity + low xp
+      const riskPct = Math.min(
+        100,
+        (u.streakCount === 0 ? 30 : 0) +
+        (daysSinceActivity > 5 ? 35 : daysSinceActivity > 2 ? 15 : 0) +
+        (u.xp < 30 ? 20 : u.xp < 80 ? 10 : 0) +
+        (lessonsCompleted === 0 ? 15 : 0)
+      );
+      const riskLevel = riskPct >= 65 ? "high" : riskPct >= 40 ? "med" : "low";
+
+      let lastActivity;
+      if (daysSinceActivity === 0) lastActivity = "Today";
+      else if (daysSinceActivity === 1) lastActivity = "Yesterday";
+      else if (daysSinceActivity < 99) lastActivity = `${daysSinceActivity} days ago`;
+      else lastActivity = "Never";
+
+      return {
+        id: u._id.toString(),
+        name: u.username || u.email.split("@")[0],
+        email: u.email,
+        streak: u.streakCount || 0,
+        xp: u.xp || 0,
+        lessonsCompleted,
+        riskPct,
+        riskLevel,
+        lastActivity,
+        status: riskPct >= 65 ? "flagged" : riskPct >= 40 ? "watching" : "resolved",
+        triggers: buildTriggers(u, daysSinceActivity),
+      };
+    });
+
+    participants.sort((a, b) => b.riskPct - a.riskPct);
+
+    const stats = {
+      total: participants.length,
+      highRisk: participants.filter(p => p.riskLevel === "high").length,
+      resolved: participants.filter(p => p.status === "resolved").length,
+      graduated: 0,
+    };
+
+    const quizzes = await Quiz.find({}, "title unit isPublished createdAt").sort({ createdAt: -1 }).lean();
+
+    res.render("coordinator", {
+      title: "Coordinator Dashboard",
+      styles: ["/coordinator.css", "/home.css"],
+      bodyClass: "page--full",
+      mainClass: "page page--full",
+      participants,
+      stats,
+      quizzes,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
+
+function buildTriggers(u, daysSinceActivity) {
+  const t = [];
+  if (daysSinceActivity > 5 && u.streakCount === 0) t.push("missing");
+  if (u.xp < 30) t.push("motivation");
+  if ((u.courseworkProgress || []).reduce((s, p) => s + (p.completedLessonSlugs?.length || 0), 0) === 0) {
+    if (daysSinceActivity > 2) t.push("overwhelmed");
+  }
+  return t;
+}
 
 // Admin-only example
 app.get("/admin", requireAuth, requireRole("admin"), (req, res) => {
