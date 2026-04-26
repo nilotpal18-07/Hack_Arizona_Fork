@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+require("dotenv").config({ path: require("path").join(__dirname, "../model/.env") });
 require("../db");
 
 const mongoose = require("mongoose");

@@ -7,11 +7,16 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
+const Anthropic = require("@anthropic-ai/sdk");
 
 const User = require("./models/User");
 const Coursework = require("./models/Coursework");
 const Quiz = require("./models/Quiz");
 const { attachCurrentUser, requireAuth, requireRole } = require("./middleware/auth");
+
+const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
 
 const app = express();
 
@@ -72,13 +77,28 @@ app.use(attachCurrentUser);
 
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
-app.get("/", (req, res) => {
-  res.render("index", {
-    title: "Home",
-    styles: ["/home.css"],
-    bodyClass: "page--full",
-    mainClass: "page page--full",
-  });
+app.get("/", async (req, res, next) => {
+  try {
+    const [coursework, quizzes, allUsers] = await Promise.all([
+      Coursework.findOne({ isPublished: true }).sort({ level: 1 }).lean(),
+      Quiz.find({ isPublished: true }).sort({ createdAt: -1 }).lean(),
+      User.find({}, "xp").lean(),
+    ]);
+    const myXp = res.locals.currentUser?.xp || 0;
+    const behind = allUsers.filter(u => (u.xp || 0) < myXp).length;
+    const aheadPct = allUsers.length > 1
+      ? Math.round((behind / (allUsers.length - 1)) * 100)
+      : 100;
+    res.render("index", {
+      title: "Home",
+      styles: ["/home.css"],
+      bodyClass: "page--full",
+      mainClass: "page page--full",
+      coursework,
+      quizzes,
+      aheadPct,
+    });
+  } catch (err) { next(err); }
 });
 
 app.get("/sign-in", (req, res) => {
@@ -154,12 +174,101 @@ app.get("/coursework", requireAuth, async (req, res, next) => {
   }
 });
 
+// Profile
 app.get("/profile", requireAuth, (req, res) => {
-  res.send(`Profile (protected) - ${res.locals.currentUser?.email || ""}`);
+  res.render("profile", {
+    title: "Profile",
+    styles: ["/home.css", "/quiz-builder.css"],
+    bodyClass: "page--full",
+    mainClass: "page page--full",
+  });
+});
+
+app.post("/profile", requireAuth, async (req, res, next) => {
+  try {
+    const { username, email, currentPassword, newPassword, confirmPassword } = req.body;
+    const user = await User.findById(res.locals.currentUser._id);
+
+    if (username) user.username = String(username).trim();
+    if (email) user.email = String(email).toLowerCase().trim();
+
+    if (newPassword) {
+      if (newPassword !== confirmPassword) {
+        return res.render("profile", {
+          title: "Profile",
+          styles: ["/home.css", "/quiz-builder.css"],
+          bodyClass: "page--full",
+          mainClass: "page page--full",
+          flash: "New passwords do not match.",
+        });
+      }
+      const ok = await bcrypt.compare(String(currentPassword || ""), user.passwordHash);
+      if (!ok) {
+        return res.render("profile", {
+          title: "Profile",
+          styles: ["/home.css", "/quiz-builder.css"],
+          bodyClass: "page--full",
+          mainClass: "page page--full",
+          flash: "Current password is incorrect.",
+        });
+      }
+      user.passwordHash = await bcrypt.hash(String(newPassword), 10);
+    }
+
+    await user.save();
+    res.redirect("/profile");
+  } catch (err) { next(err); }
+});
+
+// Leaderboard
+app.get("/leaderboard", requireAuth, async (req, res, next) => {
+  try {
+    const allUsers = await User.find({}, "username email xp streakCount level courseworkProgress").sort({ xp: -1 }).lean();
+    const myId = res.locals.currentUser?._id?.toString();
+    const myRank = allUsers.findIndex(u => u._id.toString() === myId) + 1;
+    const myXp = res.locals.currentUser?.xp || 0;
+    const behind = allUsers.filter(u => (u.xp || 0) < myXp).length;
+    const aheadPct = allUsers.length > 1
+      ? Math.round((behind / (allUsers.length - 1)) * 100)
+      : 100;
+    res.render("leaderboard", {
+      title: "Leaderboard",
+      styles: ["/home.css", "/coordinator.css", "/leaderboard.css"],
+      bodyClass: "page--full",
+      mainClass: "page page--full",
+      allUsers,
+      myRank,
+      aheadPct,
+    });
+  } catch (err) { next(err); }
+});
+
+// Chatbot
+app.post("/chat", requireAuth, express.json(), async (req, res) => {
+  const { message } = req.body || {};
+  if (!message) return res.json({ reply: "Please type a message." });
+
+  if (!anthropic) {
+    return res.json({
+      reply: "Chatbot not configured — add ANTHROPIC_API_KEY to model/.env to enable AI responses.",
+    });
+  }
+
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 300,
+      system: "You are a friendly assistant for the Community Food Bank volunteer training program. Answer questions about lessons, quests, food bank operations, and volunteer resources. Keep responses concise (2-3 sentences max).",
+      messages: [{ role: "user", content: String(message).slice(0, 500) }],
+    });
+    res.json({ reply: response.content[0]?.text || "I'm not sure about that. Try asking your coordinator!" });
+  } catch (err) {
+    res.json({ reply: "I'm having trouble responding right now. Please try again shortly." });
+  }
 });
 
 app.get("/streaks", requireAuth, (req, res) => {
-  res.send("Streaks (protected)");
+  res.redirect("/leaderboard");
 });
 
 // Quiz builder

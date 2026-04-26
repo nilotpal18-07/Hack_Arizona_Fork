@@ -1,0 +1,80 @@
+<!-- ── Chatbot floating widget ── -->
+<div class="chatbot" id="chatbot" aria-label="AI assistant" hidden>
+  <div class="chatbot__header">
+    <span>🤖 Food Bank Assistant</span>
+    <button class="chatbot__close" id="chatbotClose" type="button" aria-label="Close chat">✕</button>
+  </div>
+  <div class="chatbot__messages" id="chatbotMessages">
+    <div class="chatbot__msg chatbot__msg--bot">
+      Hi! I'm here to help with your Food Bank training. Ask me anything about your lessons, quests, or resources.
+    </div>
+  </div>
+  <form class="chatbot__input" id="chatbotForm" autocomplete="off">
+    <input
+      class="chatbot__field"
+      id="chatbotField"
+      type="text"
+      placeholder="Ask a question…"
+      maxlength="500"
+      required
+    />
+    <button class="chatbot__send" type="submit" aria-label="Send">➤</button>
+  </form>
+</div>
+
+<button class="chatbot__fab" id="chatbotFab" type="button" aria-label="Open chat assistant">
+  💬
+  <span class="chatbot__fabLabel">Help</span>
+</button>
+
+<script>
+(function () {
+  const bot      = document.getElementById("chatbot");
+  const fab      = document.getElementById("chatbotFab");
+  const closeBtn = document.getElementById("chatbotClose");
+  const form     = document.getElementById("chatbotForm");
+  const field    = document.getElementById("chatbotField");
+  const messages = document.getElementById("chatbotMessages");
+
+  fab.addEventListener("click", () => {
+    bot.hidden = false;
+    fab.style.display = "none";
+    field.focus();
+  });
+
+  closeBtn.addEventListener("click", () => {
+    bot.hidden = true;
+    fab.style.display = "";
+  });
+
+  function addMsg(text, role) {
+    const el = document.createElement("div");
+    el.className = `chatbot__msg chatbot__msg--${role}`;
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = field.value.trim();
+    if (!text) return;
+    field.value = "";
+    addMsg(text, "user");
+    const thinking = addMsg("…", "bot");
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      thinking.textContent = data.reply || "Sorry, I couldn't respond right now.";
+    } catch {
+      thinking.textContent = "Connection error — please try again.";
+    }
+  });
+})();
+</script>

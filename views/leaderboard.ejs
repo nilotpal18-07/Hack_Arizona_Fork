@@ -1,0 +1,102 @@
+<% layout("layout") %>
+
+<section class="lboard">
+  <header class="coord__header">
+    <div>
+      <h1 class="coord__title">Leaderboard</h1>
+      <p class="coord__sub">See how you stack up against the class</p>
+    </div>
+    <div class="pillRow">
+      <div class="pill">
+        <span class="pill__label">🔥 Your streak</span>
+        <span class="pill__value"><%= currentUser?.streakCount || 0 %> days</span>
+      </div>
+      <div class="pill">
+        <span class="pill__label">⚡ Your XP</span>
+        <span class="pill__value"><%= currentUser?.xp || 0 %></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Your standing card ── -->
+  <div class="lboard__standing">
+    <div class="lboard__standingMain">
+      <div class="lboard__standingLabel">You are ahead of</div>
+      <div class="lboard__standingPct"><%= aheadPct %>%</div>
+      <div class="lboard__standingSub">of all participants to date</div>
+    </div>
+    <div class="lboard__standingStats">
+      <div class="statCard statCard--gold" style="flex:1">
+        <span class="statCard__label">Your rank</span>
+        <span class="statCard__value">#<%= myRank %></span>
+      </div>
+      <div class="statCard" style="flex:1">
+        <span class="statCard__label">Total users</span>
+        <span class="statCard__value"><%= allUsers.length %></span>
+      </div>
+      <div class="statCard statCard--resolved" style="flex:1">
+        <span class="statCard__label">Your level</span>
+        <span class="statCard__value"><%= currentUser?.level || 1 %></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Class leaderboard ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Class standings</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Ranked by</span>
+        <span class="pill__value">XP</span>
+      </span>
+    </div>
+
+    <div class="watchlist">
+      <table class="watchlist__table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Participant</th>
+            <th>Level</th>
+            <th>XP</th>
+            <th>Streak</th>
+            <th>Lessons done</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% allUsers.forEach((u, i) => {
+            const isMe = currentUser && u._id.toString() === currentUser._id.toString();
+            const lessons = (u.courseworkProgress || []).reduce((s,p) => s + (p.completedLessonSlugs?.length || 0), 0);
+          %>
+          <tr class="<%= isMe ? 'lboard__myRow' : '' %>">
+            <td>
+              <% if (i === 0) { %><span class="lboard__medal">🥇</span>
+              <% } else if (i === 1) { %><span class="lboard__medal">🥈</span>
+              <% } else if (i === 2) { %><span class="lboard__medal">🥉</span>
+              <% } else { %><span style="color:var(--muted);font-weight:800">#<%= i+1 %></span>
+              <% } %>
+            </td>
+            <td>
+              <div style="font-weight:900">
+                <%= u.username || u.email.split("@")[0] %>
+                <% if (isMe) { %><span class="badge badge--resolved" style="margin-left:6px">You</span><% } %>
+              </div>
+              <div style="font-size:12px;color:var(--muted)"><%= u.email %></div>
+            </td>
+            <td><span class="weekPill">Lv <%= u.level || 1 %></span></td>
+            <td style="font-weight:900;font-variant-numeric:tabular-nums"><%= u.xp || 0 %></td>
+            <td>
+              <% if ((u.streakCount || 0) > 0) { %>
+                🔥 <%= u.streakCount %> days
+              <% } else { %>
+                <span style="color:var(--muted)">—</span>
+              <% } %>
+            </td>
+            <td><%= lessons %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

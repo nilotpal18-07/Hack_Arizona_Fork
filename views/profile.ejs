@@ -1,0 +1,89 @@
+<% layout("layout") %>
+
+<section class="builder" style="max-width:560px">
+  <header class="builder__header">
+    <div>
+      <h1 class="builder__title">Profile</h1>
+      <p class="builder__sub">Update your account information</p>
+    </div>
+    <a class="btn btn--ghost" href="/">← Home</a>
+  </header>
+
+  <% if (locals.flash) { %>
+    <div class="toast toast--show" style="position:static;transform:none;margin-bottom:0;display:block">
+      <%= flash %>
+    </div>
+  <% } %>
+
+  <!-- Stats summary -->
+  <div class="statRow">
+    <div class="statCard statCard--gold">
+      <span class="statCard__label">XP</span>
+      <span class="statCard__value"><%= currentUser.xp || 0 %></span>
+    </div>
+    <div class="statCard">
+      <span class="statCard__label">🔥 Streak</span>
+      <span class="statCard__value"><%= currentUser.streakCount || 0 %> days</span>
+    </div>
+    <div class="statCard statCard--resolved">
+      <span class="statCard__label">Level</span>
+      <span class="statCard__value"><%= currentUser.level || 1 %></span>
+    </div>
+  </div>
+
+  <!-- Edit form -->
+  <form action="/profile" method="POST" class="formPanel" novalidate>
+
+    <div class="formPanel__header">
+      <h2 class="formPanel__title">Account details</h2>
+    </div>
+    <div class="formPanel__body">
+
+      <div class="field">
+        <label class="field__label" for="username">Display name</label>
+        <input class="field__input" id="username" name="username" type="text"
+          value="<%= currentUser.username || '' %>" maxlength="32" placeholder="Your name" />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="email">Email</label>
+        <input class="field__input" id="email" name="email" type="email"
+          value="<%= currentUser.email %>" maxlength="254" required />
+      </div>
+
+    </div>
+
+    <div class="formPanel__header" style="border-top:1px solid rgba(107,42,90,0.1)">
+      <h2 class="formPanel__title">Change password</h2>
+    </div>
+    <div class="formPanel__body">
+
+      <div class="field">
+        <label class="field__label" for="currentPassword">Current password</label>
+        <input class="field__input" id="currentPassword" name="currentPassword"
+          type="password" placeholder="Leave blank to keep current" />
+      </div>
+
+      <div class="field field--row">
+        <div class="field">
+          <label class="field__label" for="newPassword">New password</label>
+          <input class="field__input" id="newPassword" name="newPassword"
+            type="password" placeholder="Min 8 characters" minlength="8" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="confirmPassword">Confirm new</label>
+          <input class="field__input" id="confirmPassword" name="confirmPassword"
+            type="password" placeholder="Repeat new password" />
+        </div>
+      </div>
+
+    </div>
+
+    <div class="submitBar" style="border-radius:0;border-left:none;border-right:none;border-bottom:none">
+      <span class="submitBar__info">Changes apply immediately.</span>
+      <div class="submitBar__actions">
+        <button class="btn btn--primary" type="submit">💾 Save changes</button>
+      </div>
+    </div>
+  </form>
+</section>
