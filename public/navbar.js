@@ -1,22 +1,20 @@
-function applyStreakUI(streaks) {
-  const countEl = document.getElementById("streakCount");
-  const fireEl = document.getElementById("fireIcon");
-  if (!countEl || !fireEl) return;
+function setStreakCount(count) {
+  const streakCountEl = document.getElementById("streakCount");
+  const fireIconEl = document.getElementById("fireIcon");
 
-  const n = Number.isFinite(streaks) ? Math.max(0, Math.floor(streaks)) : 0;
-  countEl.textContent = String(n);
-  countEl.dataset.streaks = String(n);
+  if (!streakCountEl || !fireIconEl) return;
 
-  if (n > 0) fireEl.classList.add("nav__fire--lit");
-  else fireEl.classList.remove("nav__fire--lit");
+  const n = Number.isFinite(count) ? count : Number.parseInt(String(count), 10);
+  const safe = Number.isFinite(n) && n > 0 ? n : 0;
+
+  streakCountEl.textContent = String(safe);
+  fireIconEl.classList.toggle("nav__fire--lit", safe > 0);
 }
 
-// Small convenience for testing in devtools.
-window.setStreaks = applyStreakUI;
+// Demo default. In your real app, set window.streakCount from server/user data.
+window.streakCount = window.streakCount ?? 0;
+setStreakCount(window.streakCount);
 
-document.addEventListener("DOMContentLoaded", () => {
-  const countEl = document.getElementById("streakCount");
-  const initial = countEl ? Number.parseInt(countEl.dataset.streaks || "0", 10) : 0;
-  applyStreakUI(Number.isNaN(initial) ? 0 : initial);
-});
+// Optional helper for console testing: setStreakCount(5)
+window.setStreakCount = setStreakCount;
 

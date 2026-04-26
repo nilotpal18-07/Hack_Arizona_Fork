@@ -1,21 +1,11 @@
 const express = require("express");
 const path = require("path");
-const mongoose = require("./db");
 
 const app = express();
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+require("./db"); // To run mongoose.connect() code from db.js
 
-app.get("/health", (req, res) => {
-  res.json({
-    ok: true,
-    mongo:
-      mongoose.connection.readyState === 1
-        ? "connected"
-        : `state_${mongoose.connection.readyState}`,
-  });
-});
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
