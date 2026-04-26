@@ -1,0 +1,384 @@
+<% layout("layout") %>
+
+<%
+// ── Mock data (replace with real DB queries) ──────────────────────────
+const currentWeek = 6;
+
+const stats = {
+  total: 24,
+  highRisk: 5,
+  resolved: 8,
+  graduated: 3,
+};
+
+const watchlist = [
+  {
+    id: "1",
+    name: "Maria G.",
+    week: 6,
+    riskPct: 82,
+    riskLevel: "high",
+    triggers: ["missing", "motivation"],
+    lastActivity: "6 days ago",
+    status: "flagged",
+  },
+  {
+    id: "2",
+    name: "James T.",
+    week: 5,
+    riskPct: 74,
+    riskLevel: "high",
+    triggers: ["housing", "financial"],
+    lastActivity: "4 days ago",
+    status: "flagged",
+  },
+  {
+    id: "3",
+    name: "Priya L.",
+    week: 6,
+    riskPct: 68,
+    riskLevel: "high",
+    triggers: ["childcare", "overwhelmed"],
+    lastActivity: "3 days ago",
+    status: "flagged",
+  },
+  {
+    id: "4",
+    name: "Derek M.",
+    week: 4,
+    riskPct: 61,
+    riskLevel: "high",
+    triggers: ["transport", "motivation"],
+    lastActivity: "2 days ago",
+    status: "flagged",
+  },
+  {
+    id: "5",
+    name: "Rosa F.",
+    week: 6,
+    riskPct: 55,
+    riskLevel: "med",
+    triggers: ["financial"],
+    lastActivity: "Yesterday",
+    status: "watching",
+  },
+  {
+    id: "6",
+    name: "Kevin W.",
+    week: 3,
+    riskPct: 30,
+    riskLevel: "low",
+    triggers: [],
+    lastActivity: "Today",
+    status: "resolved",
+  },
+];
+
+const interventions = [
+  {
+    id: "1",
+    name: "Maria G.",
+    triggerLabel: "Missing reminders — no SMS reply after 2 nudges",
+    automated: "Red flag raised on Dashboard 2. SMS nudges sent (×2).",
+    required: "Manual phone call required",
+    resolved: false,
+    week: 6,
+  },
+  {
+    id: "2",
+    name: "James T.",
+    triggerLabel: "Housing instability flagged",
+    automated: "Primavera Foundation + rental assist link sent via SMS.",
+    required: "Confirm receipt + schedule follow-up",
+    resolved: false,
+    week: 5,
+  },
+  {
+    id: "3",
+    name: "Priya L.",
+    triggerLabel: "Feeling overwhelmed — confidence below 3 after 2+ chapters",
+    automated: "Chatbot offered extra practice + La Frontera link sent.",
+    required: "Coordinator alerted — check in if score persists",
+    resolved: false,
+    week: 6,
+  },
+  {
+    id: "4",
+    name: "Derek M.",
+    triggerLabel: "Transportation barrier flagged",
+    automated: "Google Maps route + Sun Tran pass link shown on dashboard.",
+    required: "Confirm transport plan in next check-in",
+    resolved: true,
+    week: 4,
+  },
+];
+
+const resources = [
+  {
+    icon: "🚌",
+    title: "Transportation",
+    trigger: "Transportation barrier flagged or changed",
+    links: [
+      { label: "Sun Tran Pass Info", href: "https://www.suntran.com/fares/" },
+      { label: "Google Maps — Food Bank Route", href: "https://maps.google.com" },
+    ],
+  },
+  {
+    icon: "🏠",
+    title: "Housing Instability",
+    trigger: "Housing instability flagged or changed",
+    links: [
+      { label: "Primavera Foundation", href: "https://www.primavera.org" },
+      { label: "Rental Assistance (AZ)", href: "https://des.az.gov/services/basic-needs/rental-utility-assistance" },
+    ],
+  },
+  {
+    icon: "👶",
+    title: "Childcare",
+    trigger: "Childcare load change flagged or changed",
+    links: [
+      { label: "DES Childcare Subsidy", href: "https://des.az.gov/services/child-family/childcare" },
+      { label: "Google Maps — Nearby Centers", href: "https://maps.google.com" },
+    ],
+  },
+  {
+    icon: "💸",
+    title: "Financial Stress",
+    trigger: "Financial stress score rises week-on-week",
+    links: [
+      { label: "Motivational SMS Template", href: "#sms-financial" },
+      { label: "Community Food Bank Resources", href: "https://www.communityfoodbank.org" },
+    ],
+  },
+  {
+    icon: "🎯",
+    title: "Motivation Drop",
+    trigger: "Weekly score below 3/5",
+    links: [
+      { label: "Personalised SMS — Goal Anchor", href: "#sms-motivation" },
+      { label: "View Participant Goal", href: "#" },
+    ],
+  },
+  {
+    icon: "🧠",
+    title: "Feeling Overwhelmed",
+    trigger: "Confidence below 3 after chapter",
+    links: [
+      { label: "La Frontera Mental Health", href: "https://www.lafrontera.org" },
+      { label: "Extra Practice (Chatbot)", href: "/coursework" },
+    ],
+  },
+  {
+    icon: "🚨",
+    title: "Missing Reminders",
+    trigger: "No SMS reply after 2 nudges — human-in-the-loop required",
+    links: [
+      { label: "Call Log Template", href: "#call-log" },
+      { label: "Mark as Contacted", href: "#" },
+    ],
+  },
+];
+
+function triggerClass(t) {
+  return { transport: "transport", housing: "housing", childcare: "childcare",
+           financial: "financial", motivation: "motivation",
+           overwhelmed: "overwhelmed", missing: "missing" }[t] || "transport";
+}
+
+function triggerLabel(t) {
+  return { transport: "🚌 Transport", housing: "🏠 Housing",
+           childcare: "👶 Childcare", financial: "💸 Financial",
+           motivation: "🎯 Motivation", overwhelmed: "🧠 Overwhelmed",
+           missing: "🚨 Missing" }[t] || t;
+}
+%>
+
+<section class="coord">
+
+  <!-- ── Header ── -->
+  <header class="coord__header">
+    <div>
+      <h1 class="coord__title">Coordinator Dashboard</h1>
+      <p class="coord__sub">Risk watchlist · Intervention panel · Resource cards</p>
+    </div>
+    <div class="pillRow">
+      <div class="pill">
+        <span class="pill__label">Program week</span>
+        <span class="pill__value"><%= currentWeek %> / 10</span>
+      </div>
+      <a class="btn btn--primary" href="/coordinator/quiz/new" style="text-decoration:none">＋ Create quiz</a>
+    </div>
+  </header>
+
+  <!-- ── Stats row ── -->
+  <div class="statRow">
+    <div class="statCard">
+      <span class="statCard__label">Total participants</span>
+      <span class="statCard__value"><%= stats.total %></span>
+    </div>
+    <div class="statCard statCard--risk">
+      <span class="statCard__label">High risk</span>
+      <span class="statCard__value"><%= stats.highRisk %></span>
+    </div>
+    <div class="statCard statCard--resolved">
+      <span class="statCard__label">Resolved</span>
+      <span class="statCard__value"><%= stats.resolved %></span>
+    </div>
+    <div class="statCard statCard--gold">
+      <span class="statCard__label">Graduated</span>
+      <span class="statCard__value"><%= stats.graduated %></span>
+    </div>
+  </div>
+
+  <!-- ── Risk Watchlist ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Risk Watchlist</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Dropout model</span>
+        <span class="pill__value">Logistic regression + SHAP</span>
+      </span>
+    </div>
+
+    <div class="watchlist">
+      <table class="watchlist__table">
+        <thead>
+          <tr>
+            <th>Participant</th>
+            <th>Week</th>
+            <th>Risk score</th>
+            <th>Active triggers</th>
+            <th>Last activity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% watchlist.forEach(p => { %>
+          <tr>
+            <td style="font-weight:900"><%= p.name %></td>
+            <td><span class="weekPill">Wk <%= p.week %></span></td>
+            <td>
+              <div class="riskBar">
+                <div class="riskBar__track">
+                  <div
+                    class="riskBar__fill riskBar__fill--<%= p.riskLevel %>"
+                    style="width:<%= p.riskPct %>%"
+                  ></div>
+                </div>
+                <span class="riskBar__pct riskBar__pct--<%= p.riskLevel %>"><%= p.riskPct %>%</span>
+              </div>
+            </td>
+            <td>
+              <div class="triggerBadges">
+                <% if (p.triggers.length === 0) { %>
+                  <span class="badge badge--resolved">✓ Clear</span>
+                <% } %>
+                <% p.triggers.forEach(t => { %>
+                  <span class="badge badge--<%= triggerClass(t) %>"><%= triggerLabel(t) %></span>
+                <% }) %>
+              </div>
+            </td>
+            <td style="color:var(--muted);font-size:13px"><%= p.lastActivity %></td>
+            <td>
+              <div class="actionBtns">
+                <% if (p.status !== "resolved") { %>
+                  <button class="iconBtn iconBtn--danger" type="button" title="Flag for intervention">🚩 Flag</button>
+                  <button class="iconBtn" type="button" title="Log outreach">📞 Outreach</button>
+                <% } else { %>
+                  <span class="badge badge--resolved">✓ Resolved</span>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Intervention Panel ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Intervention Panel</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Notification engine</span>
+        <span class="pill__value">7 trigger types</span>
+      </span>
+    </div>
+
+    <div class="interventionGrid">
+      <% interventions.forEach(item => { %>
+      <div class="interventionCard <%= item.resolved ? 'interventionCard--resolved' : '' %>">
+        <div class="interventionCard__top">
+          <div>
+            <div class="interventionCard__name"><%= item.name %></div>
+            <div class="interventionCard__trigger"><%= item.triggerLabel %></div>
+          </div>
+          <span class="weekPill">Wk <%= item.week %></span>
+        </div>
+
+        <div class="interventionCard__body">
+          <div class="interventionCard__row">
+            <span class="interventionCard__rowLabel">Automated response</span>
+            <span class="interventionCard__rowValue"><%= item.automated %></span>
+          </div>
+          <div class="interventionCard__row">
+            <span class="interventionCard__rowLabel">
+              <% if (!item.resolved) { %>🔴<% } else { %>✅<% } %>
+              Coordinator action
+            </span>
+            <span class="interventionCard__rowValue"><%= item.required %></span>
+          </div>
+        </div>
+
+        <div class="interventionCard__actions">
+          <% if (!item.resolved) { %>
+            <button class="btn btn--primary" type="button" style="font-size:13px;padding:8px 12px">
+              📞 Log outreach
+            </button>
+            <button class="btn" type="button" style="font-size:13px;padding:8px 12px">
+              ✅ Mark resolved
+            </button>
+          <% } else { %>
+            <span class="badge badge--resolved" style="padding:8px 12px;border-radius:10px">✓ Resolved — no action needed</span>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- ── Resource Cards ── -->
+  <section>
+    <div class="sectionHead">
+      <h2 class="sectionHead__title">Resource Cards</h2>
+      <span class="pill" style="box-shadow:none;background:transparent">
+        <span class="pill__label">Resource matcher</span>
+        <span class="pill__value">Barrier → partner + maps</span>
+      </span>
+    </div>
+
+    <div class="resourceGrid">
+      <% resources.forEach(r => { %>
+      <div class="resourceCard">
+        <div class="resourceCard__head">
+          <span class="resourceCard__icon"><%= r.icon %></span>
+          <div>
+            <h3 class="resourceCard__title"><%= r.title %></h3>
+            <div class="resourceCard__trigger"><%= r.trigger %></div>
+          </div>
+        </div>
+        <div class="resourceCard__links">
+          <% r.links.forEach(link => { %>
+          <a class="resourceLink" href="<%= link.href %>" target="_blank" rel="noopener noreferrer">
+            <%= link.label %>
+            <span class="resourceLink__arrow">↗</span>
+          </a>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+
+</section>

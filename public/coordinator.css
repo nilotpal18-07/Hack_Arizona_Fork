@@ -1,0 +1,492 @@
+/* ── Coordinator Dashboard (Dashboard 2) ── */
+
+.coord {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+}
+
+/* ── Page header ── */
+.coord__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.coord__title {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.2px;
+}
+
+.coord__sub {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+/* ── Stats row ── */
+.statRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  flex: 1 1 140px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(107, 42, 90, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 4px;
+}
+
+.statCard__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.statCard__value {
+  font-size: 32px;
+  font-weight: 950;
+  color: var(--text);
+  line-height: 1;
+}
+
+.statCard--risk {
+  border-color: rgba(185, 28, 28, 0.22);
+  background: rgba(254, 242, 242, 0.85);
+}
+
+.statCard--risk .statCard__value {
+  color: #b91c1c;
+}
+
+.statCard--resolved {
+  border-color: rgba(21, 128, 61, 0.22);
+  background: rgba(240, 253, 244, 0.85);
+}
+
+.statCard--resolved .statCard__value {
+  color: #15803d;
+}
+
+.statCard--gold {
+  border-color: rgba(214, 162, 31, 0.35);
+  background: rgba(255, 249, 230, 0.85);
+}
+
+.statCard--gold .statCard__value {
+  color: #92680a;
+}
+
+/* ── Section headers ── */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sectionHead__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Risk Watchlist table ── */
+.watchlist {
+  border-radius: 18px;
+  border: 1px solid rgba(107, 42, 90, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.watchlist__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.watchlist__table thead tr {
+  background: rgba(107, 42, 90, 0.05);
+  border-bottom: 1px solid rgba(107, 42, 90, 0.12);
+}
+
+.watchlist__table th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.watchlist__table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(107, 42, 90, 0.07);
+  vertical-align: middle;
+}
+
+.watchlist__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.watchlist__table tbody tr:hover {
+  background: rgba(107, 42, 90, 0.03);
+}
+
+/* Risk score bar */
+.riskBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.riskBar__track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(107, 42, 90, 0.1);
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.riskBar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.riskBar__fill--high { background: #dc2626; }
+.riskBar__fill--med  { background: #f59e0b; }
+.riskBar__fill--low  { background: #22c55e; }
+
+.riskBar__pct {
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: right;
+}
+
+.riskBar__pct--high { color: #dc2626; }
+.riskBar__pct--med  { color: #d97706; }
+.riskBar__pct--low  { color: #16a34a; }
+
+/* Trigger badges */
+.triggerBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge--transport {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.badge--housing {
+  background: rgba(168, 85, 247, 0.12);
+  color: #7e22ce;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.badge--childcare {
+  background: rgba(236, 72, 153, 0.12);
+  color: #be185d;
+  border: 1px solid rgba(236, 72, 153, 0.25);
+}
+
+.badge--financial {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.badge--motivation {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge--overwhelmed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.badge--missing {
+  background: rgba(185, 28, 28, 0.14);
+  color: #7f1d1d;
+  border: 1px solid rgba(185, 28, 28, 0.3);
+}
+
+.badge--resolved {
+  background: rgba(21, 128, 61, 0.12);
+  color: #14532d;
+  border: 1px solid rgba(21, 128, 61, 0.25);
+}
+
+/* Week pill */
+.weekPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(214, 162, 31, 0.15);
+  border: 1px solid rgba(214, 162, 31, 0.35);
+  color: rgba(68, 27, 55, 0.9);
+}
+
+/* Action buttons in table */
+.actionBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+  text-decoration: none;
+  color: var(--link);
+}
+
+.iconBtn:hover {
+  background: var(--panel);
+  border-color: var(--ring);
+}
+
+.iconBtn--danger {
+  color: #b91c1c;
+}
+
+.iconBtn--danger:hover {
+  background: rgba(185, 28, 28, 0.08);
+  border-color: rgba(185, 28, 28, 0.2);
+}
+
+.iconBtn--success {
+  color: #15803d;
+}
+
+.iconBtn--success:hover {
+  background: rgba(21, 128, 61, 0.08);
+  border-color: rgba(21, 128, 61, 0.2);
+}
+
+/* ── Intervention Panel ── */
+.interventionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.interventionCard {
+  border-radius: 16px;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.interventionCard--resolved {
+  border-color: rgba(21, 128, 61, 0.2);
+  opacity: 0.72;
+}
+
+.interventionCard__top {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(107, 42, 90, 0.1);
+  background: rgba(254, 242, 242, 0.6);
+}
+
+.interventionCard--resolved .interventionCard__top {
+  background: rgba(240, 253, 244, 0.6);
+}
+
+.interventionCard__name {
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.interventionCard__trigger {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.interventionCard__body {
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.interventionCard__row {
+  display: grid;
+  gap: 3px;
+}
+
+.interventionCard__rowLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.interventionCard__rowValue {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.interventionCard__actions {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(107, 42, 90, 0.08);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Resource Cards ── */
+.resourceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.resourceCard {
+  border-radius: 16px;
+  border: 1px solid rgba(107, 42, 90, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.resourceCard__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.resourceCard__icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.resourceCard__title {
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--text);
+  margin: 0;
+}
+
+.resourceCard__trigger {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.resourceCard__links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(107, 42, 90, 0.16);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--link);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.resourceLink:hover {
+  background: var(--panel);
+  border-color: var(--ring);
+  transform: translateY(-1px);
+}
+
+.resourceLink__arrow {
+  margin-left: auto;
+  opacity: 0.4;
+  font-size: 11px;
+}
+
+/* ── Empty state ── */
+.emptyState {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .statRow {
+    flex-wrap: wrap;
+  }
+  .statCard {
+    flex: 1 1 120px;
+  }
+  .interventionGrid,
+  .resourceGrid {
+    grid-template-columns: 1fr;
+  }
+  .watchlist__table th:nth-child(3),
+  .watchlist__table td:nth-child(3) {
+    display: none;
+  }
+}

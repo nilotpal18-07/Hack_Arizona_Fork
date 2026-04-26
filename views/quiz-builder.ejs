@@ -1,0 +1,409 @@
+<% layout("layout") %>
+
+<div class="builder">
+
+  <!-- ── Header ── -->
+  <header class="builder__header">
+    <div>
+      <h1 class="builder__title">Quiz Builder</h1>
+      <p class="builder__sub">Create a quiz for your participants</p>
+    </div>
+    <a class="btn btn--ghost" href="/coordinator">← Back to Dashboard</a>
+  </header>
+
+  <form id="quizForm" action="/coordinator/quiz" method="POST" novalidate>
+
+    <!-- ── Quiz info ── -->
+    <div class="formPanel">
+      <div class="formPanel__header">
+        <h2 class="formPanel__title">Quiz details</h2>
+      </div>
+      <div class="formPanel__body">
+
+        <div class="field">
+          <label class="field__label" for="quizTitle">Quiz title <span>*</span></label>
+          <input class="field__input" id="quizTitle" name="title" type="text"
+            placeholder="e.g. Food Bank Safety Basics" required maxlength="120" />
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="quizDesc">Description</label>
+          <textarea class="field__textarea" id="quizDesc" name="description"
+            placeholder="What will participants learn from this quiz?"></textarea>
+        </div>
+
+        <div class="field field--row">
+          <div class="field">
+            <label class="field__label" for="quizUnit">Unit / Module</label>
+            <input class="field__input" id="quizUnit" name="unit" type="text"
+              placeholder="e.g. Unit 1 — Food Bank Foundations" maxlength="80" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="quizXp">XP reward</label>
+            <input class="field__input" id="quizXp" name="xp" type="number"
+              value="20" min="0" max="500" />
+            <span class="field__hint">Points awarded on completion</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions ── -->
+    <div class="formPanel">
+      <div class="formPanel__header">
+        <h2 class="formPanel__title">Questions</h2>
+        <div class="pill" style="box-shadow:none;background:transparent">
+          <span class="pill__label">Total</span>
+          <span class="pill__value" id="questionCount">0</span>
+        </div>
+      </div>
+      <div class="formPanel__body" style="padding-bottom:8px">
+
+        <!-- Question cards injected here by JS -->
+        <div class="questionList" id="questionList"></div>
+
+        <!-- Add question buttons -->
+        <div class="addQuestionZone">
+          <button class="addQuestionZone__btn" type="button" id="addMC">
+            ＋ Multiple choice
+          </button>
+          <button class="addQuestionZone__btn" type="button" id="addTF">
+            ＋ True / False
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Hidden field carries serialised question data -->
+    <input type="hidden" name="questions" id="questionsPayload" />
+
+    <!-- ── Submit bar ── -->
+    <div class="submitBar">
+      <span class="submitBar__info" id="formStatus">Add at least one question to save.</span>
+      <div class="submitBar__actions">
+        <button class="btn" type="button" id="saveDraft">💾 Save draft</button>
+        <button class="btn btn--primary" type="submit" id="publishBtn">🚀 Publish quiz</button>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  // ── State ──────────────────────────────────────────────
+  let questions = [];
+  let nextId = 1;
+
+  // ── DOM refs ──────────────────────────────────────────
+  const list        = document.getElementById("questionList");
+  const countEl     = document.getElementById("questionCount");
+  const statusEl    = document.getElementById("formStatus");
+  const payload     = document.getElementById("questionsPayload");
+  const form        = document.getElementById("quizForm");
+  const toastEl     = document.getElementById("toast");
+
+  // ── Toast ─────────────────────────────────────────────
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("toast--show");
+    setTimeout(() => toastEl.classList.remove("toast--show"), 2800);
+  }
+
+  // ── Sync state → hidden field ─────────────────────────
+  function syncPayload() {
+    // Pull current values from DOM into state before syncing
+    questions.forEach(q => {
+      const card = document.querySelector(`[data-qid="${q.id}"]`);
+      if (!card) return;
+      const textEl = card.querySelector(".q-text");
+      if (textEl) q.text = textEl.value;
+      const expEl = card.querySelector(".q-explanation");
+      if (expEl) q.explanation = expEl.value;
+
+      if (q.type === "multiple-choice") {
+        const opts = card.querySelectorAll(".optionRow__input");
+        q.options = Array.from(opts).map(o => ({ text: o.value }));
+        const radios = card.querySelectorAll(".optionRow__radio");
+        radios.forEach((r, i) => { if (r.checked) q.correctIndex = i; });
+      } else {
+        const selected = card.querySelector(".tfBtn.tfBtn--selected-true, .tfBtn.tfBtn--selected-false");
+        if (selected) q.correctIndex = selected.dataset.val === "true" ? 0 : 1;
+      }
+    });
+
+    payload.value = JSON.stringify(questions);
+    countEl.textContent = questions.length;
+    statusEl.textContent = questions.length === 0
+      ? "Add at least one question to save."
+      : `${questions.length} question${questions.length > 1 ? "s" : ""} ready.`;
+  }
+
+  // ── Render a MC question card ─────────────────────────
+  function renderMC(q) {
+    const card = document.createElement("div");
+    card.className = "questionCard";
+    card.dataset.qid = q.id;
+
+    card.innerHTML = `
+      <div class="questionCard__top">
+        <span class="questionCard__num">${questions.indexOf(q) + 1}</span>
+        <select class="questionCard__typeSelect" data-type-switch>
+          <option value="multiple-choice" selected>Multiple choice</option>
+          <option value="true-false">True / False</option>
+        </select>
+        <button class="questionCard__remove" type="button" title="Remove question">✕</button>
+      </div>
+      <div class="questionCard__body">
+        <div class="field">
+          <label class="field__label">Question <span>*</span></label>
+          <input class="field__input q-text" type="text" placeholder="Type your question here…" value="${escHtml(q.text)}" required />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Answer options</label>
+          <div class="optionList" data-options></div>
+          <button class="addOptionBtn" type="button" data-add-option>＋ Add option</button>
+          <span class="optionHint">● Select the correct answer</span>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Explanation <span style="font-weight:600;color:var(--muted)">(optional)</span></label>
+          <input class="field__input q-explanation" type="text" placeholder="Why is this the correct answer?" value="${escHtml(q.explanation)}" />
+        </div>
+      </div>
+    `;
+
+    // Render existing options
+    const optList = card.querySelector("[data-options]");
+    q.options.forEach((_, i) => addOptionRow(optList, q, i));
+
+    // Add option button
+    card.querySelector("[data-add-option]").addEventListener("click", () => {
+      q.options.push({ text: "" });
+      addOptionRow(optList, q, q.options.length - 1);
+      syncPayload();
+    });
+
+    // Type switch
+    card.querySelector("[data-type-switch]").addEventListener("change", e => {
+      switchType(q, e.target.value);
+    });
+
+    // Remove
+    card.querySelector(".questionCard__remove").addEventListener("click", () => {
+      questions = questions.filter(x => x.id !== q.id);
+      renderAll();
+      syncPayload();
+    });
+
+    return card;
+  }
+
+  function addOptionRow(container, q, index) {
+    const row = document.createElement("div");
+    row.className = "optionRow";
+    const isCorrect = index === q.correctIndex;
+    row.innerHTML = `
+      <input class="optionRow__radio" type="radio" name="correct_${q.id}" value="${index}" ${isCorrect ? "checked" : ""} title="Mark as correct" />
+      <input class="optionRow__input ${isCorrect ? "optionRow__input--correct" : ""}" type="text"
+        placeholder="Option ${index + 1}" value="${escHtml(q.options[index]?.text || "")}" />
+      <button class="optionRow__remove" type="button" title="Remove option">✕</button>
+    `;
+
+    const radio = row.querySelector(".optionRow__radio");
+    const input = row.querySelector(".optionRow__input");
+
+    radio.addEventListener("change", () => {
+      q.correctIndex = index;
+      container.querySelectorAll(".optionRow__input").forEach((el, i) => {
+        el.classList.toggle("optionRow__input--correct", i === index);
+      });
+      syncPayload();
+    });
+
+    input.addEventListener("input", () => {
+      if (!q.options[index]) q.options[index] = { text: "" };
+      q.options[index].text = input.value;
+      syncPayload();
+    });
+
+    row.querySelector(".optionRow__remove").addEventListener("click", () => {
+      if (q.options.length <= 2) { showToast("Need at least 2 options."); return; }
+      q.options.splice(index, 1);
+      if (q.correctIndex >= q.options.length) q.correctIndex = 0;
+      // Re-render options
+      container.innerHTML = "";
+      q.options.forEach((_, i) => addOptionRow(container, q, i));
+      syncPayload();
+    });
+
+    container.appendChild(row);
+  }
+
+  // ── Render a True/False card ──────────────────────────
+  function renderTF(q) {
+    const card = document.createElement("div");
+    card.className = "questionCard";
+    card.dataset.qid = q.id;
+
+    const trueSelected  = q.correctIndex === 0;
+    const falseSelected = q.correctIndex === 1;
+
+    card.innerHTML = `
+      <div class="questionCard__top">
+        <span class="questionCard__num">${questions.indexOf(q) + 1}</span>
+        <select class="questionCard__typeSelect" data-type-switch>
+          <option value="multiple-choice">Multiple choice</option>
+          <option value="true-false" selected>True / False</option>
+        </select>
+        <button class="questionCard__remove" type="button" title="Remove question">✕</button>
+      </div>
+      <div class="questionCard__body">
+        <div class="field">
+          <label class="field__label">Question <span>*</span></label>
+          <input class="field__input q-text" type="text" placeholder="Type your true/false statement…" value="${escHtml(q.text)}" required />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Correct answer</label>
+          <div class="tfRow">
+            <button class="tfBtn ${trueSelected ? "tfBtn--selected-true" : ""}" type="button" data-val="true">✅ True</button>
+            <button class="tfBtn ${falseSelected ? "tfBtn--selected-false" : ""}" type="button" data-val="false">❌ False</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Explanation <span style="font-weight:600;color:var(--muted)">(optional)</span></label>
+          <input class="field__input q-explanation" type="text" placeholder="Why is this the correct answer?" value="${escHtml(q.explanation)}" />
+        </div>
+      </div>
+    `;
+
+    card.querySelectorAll(".tfBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        q.correctIndex = btn.dataset.val === "true" ? 0 : 1;
+        card.querySelectorAll(".tfBtn").forEach(b => {
+          b.classList.remove("tfBtn--selected-true", "tfBtn--selected-false");
+        });
+        btn.classList.add(btn.dataset.val === "true" ? "tfBtn--selected-true" : "tfBtn--selected-false");
+        syncPayload();
+      });
+    });
+
+    card.querySelector("[data-type-switch]").addEventListener("change", e => {
+      switchType(q, e.target.value);
+    });
+
+    card.querySelector(".questionCard__remove").addEventListener("click", () => {
+      questions = questions.filter(x => x.id !== q.id);
+      renderAll();
+      syncPayload();
+    });
+
+    return card;
+  }
+
+  // ── Switch type in place ──────────────────────────────
+  function switchType(q, newType) {
+    q.type = newType;
+    q.correctIndex = 0;
+    if (newType === "multiple-choice") {
+      q.options = [{ text: "" }, { text: "" }];
+    } else {
+      q.options = [{ text: "True" }, { text: "False" }];
+    }
+    renderAll();
+    syncPayload();
+  }
+
+  // ── Render all questions ──────────────────────────────
+  function renderAll() {
+    list.innerHTML = "";
+    questions.forEach(q => {
+      const card = q.type === "true-false" ? renderTF(q) : renderMC(q);
+      list.appendChild(card);
+    });
+    // Update numbers
+    list.querySelectorAll(".questionCard__num").forEach((el, i) => {
+      el.textContent = i + 1;
+    });
+  }
+
+  // ── Add question helpers ──────────────────────────────
+  function addQuestion(type) {
+    const q = {
+      id: nextId++,
+      type,
+      text: "",
+      explanation: "",
+      correctIndex: 0,
+      options: type === "multiple-choice"
+        ? [{ text: "" }, { text: "" }, { text: "" }, { text: "" }]
+        : [{ text: "True" }, { text: "False" }],
+    };
+    questions.push(q);
+    renderAll();
+    syncPayload();
+    // Scroll to new card
+    const cards = list.querySelectorAll(".questionCard");
+    cards[cards.length - 1]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  document.getElementById("addMC").addEventListener("click", () => addQuestion("multiple-choice"));
+  document.getElementById("addTF").addEventListener("click", () => addQuestion("true-false"));
+
+  // ── Save draft ────────────────────────────────────────
+  document.getElementById("saveDraft").addEventListener("click", () => {
+    syncPayload();
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = "published";
+    hidden.value = "false";
+    form.appendChild(hidden);
+    form.submit();
+  });
+
+  // ── Publish ───────────────────────────────────────────
+  form.addEventListener("submit", e => {
+    syncPayload();
+    if (questions.length === 0) {
+      e.preventDefault();
+      showToast("Add at least one question before publishing.");
+      return;
+    }
+    const unanswered = questions.filter(q =>
+      q.type === "multiple-choice" && q.options.some(o => !o.text.trim())
+    );
+    if (unanswered.length > 0) {
+      e.preventDefault();
+      showToast("Fill in all option fields before publishing.");
+      return;
+    }
+    // Mark as published
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = "published";
+    hidden.value = "true";
+    form.appendChild(hidden);
+  });
+
+  // ── Utils ─────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  // ── Bootstrap with one empty MC question ─────────────
+  addQuestion("multiple-choice");
+})();
+</script>

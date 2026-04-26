@@ -1,3 +1,4 @@
+require("dotenv").config({ path: "./model/.env" });
 const express = require("express");
 const path = require("path");
 const ejsMate = require("ejs-mate");
@@ -9,6 +10,7 @@ const LocalStrategy = require("passport-local");
 
 const User = require("./models/User");
 const Coursework = require("./models/Coursework");
+const Quiz = require("./models/Quiz");
 const { attachCurrentUser, requireAuth, requireRole } = require("./middleware/auth");
 
 const app = express();
@@ -158,6 +160,48 @@ app.get("/profile", requireAuth, (req, res) => {
 
 app.get("/streaks", requireAuth, (req, res) => {
   res.send("Streaks (protected)");
+});
+
+// Quiz builder
+app.get("/coordinator/quiz/new", requireAuth, (req, res) => {
+  res.render("quiz-builder", {
+    title: "Quiz Builder",
+    styles: ["/home.css", "/quiz-builder.css"],
+    bodyClass: "page--full",
+    mainClass: "page page--full",
+  });
+});
+
+app.post("/coordinator/quiz", requireAuth, async (req, res, next) => {
+  try {
+    const { title, description, unit, xp, questions, published } = req.body;
+    let parsed = [];
+    try { parsed = JSON.parse(questions || "[]"); } catch (_) {}
+
+    await Quiz.create({
+      title: String(title || "").trim(),
+      description: String(description || "").trim(),
+      unit: String(unit || "").trim(),
+      xp: Number(xp) || 20,
+      isPublished: published === "true",
+      questions: parsed,
+      createdBy: req.user?._id,
+    });
+
+    res.redirect("/coordinator");
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Coordinator dashboard (Dashboard 2)
+app.get("/coordinator", requireAuth, (req, res) => {
+  res.render("coordinator", {
+    title: "Coordinator Dashboard",
+    styles: ["/coordinator.css", "/home.css"],
+    bodyClass: "page--full",
+    mainClass: "page page--full",
+  });
 });
 
 // Admin-only example
