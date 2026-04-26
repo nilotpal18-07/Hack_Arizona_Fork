@@ -8,6 +8,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 
 const User = require("./models/User");
+const Coursework = require("./models/Coursework");
 const { attachCurrentUser, requireAuth, requireRole } = require("./middleware/auth");
 
 const app = express();
@@ -140,8 +141,15 @@ app.post("/sign-out", (req, res) => {
 });
 
 // Protected routes (examples)
-app.get("/coursework", requireAuth, (req, res) => {
-  res.send("Coursework (protected)");
+app.get("/coursework", requireAuth, async (req, res, next) => {
+  try {
+    const coursework = await Coursework.findOne({ isPublished: true })
+      .sort({ level: 1, createdAt: -1 })
+      .lean();
+    res.render("coursework", { title: "Coursework", coursework });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get("/profile", requireAuth, (req, res) => {

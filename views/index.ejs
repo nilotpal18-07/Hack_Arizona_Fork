@@ -128,7 +128,7 @@
 
 <script>
   // Sync the streak number to both navbar + home pill
-  const streak = window.streakCount ?? 0;
+  const streak = window.__streakCount ?? 0;
   const el = document.getElementById("homeStreak");
   if (el) el.textContent = String(streak);
 

@@ -11,12 +11,19 @@ function setStreakCount(count) {
   fireIconEl.classList.toggle("nav__fire--lit", safe > 0);
 }
 
-// Demo default. In your real app, set window.streakCount from server/user data.
-window.streakCount = window.streakCount ?? 0;
-setStreakCount(window.streakCount);
+// Demo default. Avoid `window.streakCount` because some browsers create a global
+// variable for elements with id="streakCount".
+window.__streakCount = Number.isFinite(window.__streakCount)
+  ? window.__streakCount
+  : 0;
+setStreakCount(window.__streakCount);
 
 // Optional helper for console testing: setStreakCount(5)
 window.setStreakCount = setStreakCount;
+window.setStreak = (n) => {
+  window.__streakCount = n;
+  setStreakCount(n);
+};
 
 function initNavMenu() {
   const root = document.querySelector("[data-nav-menu]");

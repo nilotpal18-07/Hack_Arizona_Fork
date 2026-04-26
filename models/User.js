@@ -2,6 +2,18 @@ const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
 
+const courseworkProgressSchema = new Schema(
+  {
+    coursework: { type: Schema.Types.ObjectId, ref: "Coursework", required: true, index: true },
+    activeUnitSlug: { type: String, default: "" },
+    activeLessonSlug: { type: String, default: "" },
+    completedLessonSlugs: { type: [String], default: [] },
+    xpEarned: { type: Number, default: 0, min: 0 },
+    lastActivityAt: { type: Date },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema(
   {
     username: {
@@ -27,6 +39,15 @@ const userSchema = new Schema(
       enum: ["user", "admin"],
       default: "user",
       index: true,
+    },
+
+    enrolledCourseworks: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Coursework" }],
+      default: [],
+    },
+    courseworkProgress: {
+      type: [courseworkProgressSchema],
+      default: [],
     },
 
     // Duolingo-like game state
@@ -59,6 +80,7 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ enrolledCourseworks: 1 });
 
 module.exports = mongoose.models.User || mongoose.model("User", userSchema);
 
