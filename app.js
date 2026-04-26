@@ -14,10 +14,15 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 app.get("/", (req, res) => {
-  res.render("index", { title: "Home" });
+  res.render("index", {
+    title: "Home",
+    styles: ["/home.css"],
+    bodyClass: "page--full",
+    mainClass: "page page--full",
+  });
 });
 
 app.get("/sign-in", (req, res) => {
